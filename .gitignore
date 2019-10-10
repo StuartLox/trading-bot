@@ -117,3 +117,5 @@ env.sh
 build.sh
 
 pyvenv.cfg
+.idea/
+.gradle/
