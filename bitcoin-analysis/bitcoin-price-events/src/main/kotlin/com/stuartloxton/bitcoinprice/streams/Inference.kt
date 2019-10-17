@@ -1,4 +1,4 @@
-package streams
+package com.stuartloxton.bitcoinprice.streams
 
 import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
 import org.nd4j.linalg.api.ndarray.INDArray
@@ -30,9 +30,9 @@ class Inference {
         return prediction
     }
 }
-
-fun main(args: Array<String>) {
-    val inf = Inference()
-    val prediction = inf.getPrediction()
-    println(prediction)
-}
+//
+//fun main(args: Array<String>) {
+//    val inf = Inference()
+//    val prediction = inf.getPrediction()
+//    println(prediction)
+//}
