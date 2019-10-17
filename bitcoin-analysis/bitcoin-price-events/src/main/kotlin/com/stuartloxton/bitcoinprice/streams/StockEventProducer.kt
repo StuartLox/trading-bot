@@ -1,17 +1,17 @@
 package com.stuartloxton.bitcoinprice.streams
 
 
-import com.stuartloxton.bitcoinprice.models.Stock
+import com.stuartloxton.bitcoinprice.Stock
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 
 
 @Service
-class StockEventProducer(private val kafkaTemplate: KafkaTemplate<String, String>){
+class StockEventProducer(private val kafkaTemplate: KafkaTemplate<String, Stock>){
 
     private val log = LoggerFactory.getLogger(StockEventProducer::class.java)
-    private val kafkaProducerTopic: String = "bitcoin-price-aud.v3"
+    private val kafkaProducerTopic: String = "bitcoin-price-aud.v8"
 
     fun stockEventProducer(stock: Stock): Boolean {
         log.info("Start of $kafkaProducerTopic || Stock Event")
@@ -19,8 +19,7 @@ class StockEventProducer(private val kafkaTemplate: KafkaTemplate<String, String
         var success = false
         try {
             log.info(stock.toString())
-            val s = Stock("BTC-AUD",1571180400,12.0,13.1,54.3,12.23, 92.2 )
-            kafkaTemplate.send(kafkaProducerTopic, s.symbol, s.symbol)
+            kafkaTemplate.send(kafkaProducerTopic, stock.symbol, stock)
             success = true
         } catch (e: Exception) {
             log.error("Exception in StockEvent.||StockEventProducer $e")

@@ -1,6 +1,7 @@
 package com.stuartloxton.bitcoinprice.handler
 
-import com.stuartloxton.bitcoinprice.models.Stock
+
+import com.stuartloxton.bitcoinprice.Stock
 import com.stuartloxton.bitcoinprice.models.StockResponse
 import com.stuartloxton.bitcoinprice.streams.StockEventProducer
 import org.json.JSONObject
@@ -45,9 +46,7 @@ class StockHandler(private val stockEventProducer: StockEventProducer) {
             .getJSONObject("indicators")
             .getJSONArray("quote")
             .getJSONObject(0)
-        log.info("\nQuote JSON")
-        log.info(quoteJson.toString())
-        log.info("\n")
+
         val volume = quoteJson.getJSONArray("volume")
         val open = quoteJson.getJSONArray("open")
         val high = quoteJson.getJSONArray("high")
@@ -58,36 +57,46 @@ class StockHandler(private val stockEventProducer: StockEventProducer) {
         val list = ArrayList<Stock>()
 
         var i = 0
-        while (i < 1) {
-            val s = Stock(
-                            this.symbol,
-                            timestamp.getLong(i),
-                            open.getDouble(i),
-                            high.getDouble(i),
-                            low.getDouble(i),
-                            close.getDouble(i),
-                            volume.getDouble(i)
-                        )
-            list.add(s)
-            log.info(s.toString())
-            val x = stockEventProducer.stockEventProducer(s)
-            log.info(x.toString())
+        while (i < timestamp.length()) {
+            try {
+                val s = Stock(
+                    this.symbol,
+                    timestamp.getLong(i),
+                    open.getDouble(i),
+                    high.getDouble(i),
+                    low.getDouble(i),
+                    close.getDouble(i),
+                    volume.getDouble(i)
+                )
+                list.add(s)
+                log.info(s.toString())
+                val x = stockEventProducer.stockEventProducer(s)
+                log.info(x.toString())
+            } catch(e: Exception) {
+                log.error(open[i].toString())
+                log.error(volume[i].toString())
+                log.error(timestamp[i].toString())
+            }
             i++
         }
         return list
     }
 
-    fun handleStocks(symbol: String): ArrayList<Stock> {
+    fun handleStocks(symbol: String): Unit {
         val json = sendGet(symbol)
         log.info(json)
         val quotes = handleQuotes(json)
-        return quotes
+        quotes.forEach {
+            publishStockEvents(it)
+        }
     }
 
     fun handleStock(request: ServerRequest): Mono<ServerResponse> {
         log.info("Start of StockHandler | handleStock")
-        val body = request.bodyToMono(Stock::class.java).flatMap { Mono.just(StockResponse("", mutableListOf(), handleStocks(request.pathVariable("symbol")))) }
-
+        val s = handleStocks(request.pathVariable("symbol"))
+        log.info(s.toString())
+        val resp = StockResponse("", mutableListOf(), "Data")
+        val body = request.bodyToMono(Stock::class.java).flatMap { Mono.just(resp) }
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(body, StockResponse::class.java)
     }
 

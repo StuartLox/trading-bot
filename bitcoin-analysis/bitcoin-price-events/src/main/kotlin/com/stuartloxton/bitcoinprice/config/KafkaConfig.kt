@@ -1,8 +1,8 @@
 package com.stuartloxton.bitcoinprice.config
 
+import com.stuartloxton.bitcoinprice.Stock
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -26,9 +26,9 @@ class KafkaConfig {
     @Bean
     fun producerConfig(): HashMap<String, Any> {
 
-        val producerProps = HashMap<String, Any>()  //doubt
+        val producerProps = HashMap<String, Any>()
         producerProps[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] =
-            StringSerializer::class.java
+            KafkaAvroSerializer::class.java
         producerProps[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] =
             KafkaAvroSerializer::class.java
         producerProps[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrapServerUrl
@@ -37,12 +37,12 @@ class KafkaConfig {
     }
 
     @Bean
-    fun producerFactory(): ProducerFactory<String, String> {
+    fun producerFactory(): ProducerFactory<String, Stock> {
         return DefaultKafkaProducerFactory(producerConfig())
     }
 
     @Bean
-    fun kafkaTemplate(): KafkaTemplate<String, String> {
+    fun kafkaTemplate(): KafkaTemplate<String, Stock> {
         return KafkaTemplate(producerFactory())
     }
 

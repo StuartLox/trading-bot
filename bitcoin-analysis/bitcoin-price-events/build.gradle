@@ -18,6 +18,10 @@ repositories {
     maven { url 'https://packages.confluent.io/maven/' }
 }
 
+sourceSets {
+    main.java.srcDirs += 'build/generated-main-avro-java/com/stuartloxton/bitcoinprice/Stock'
+}
+
 dependencies {
     implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
@@ -55,3 +59,6 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+sourceSets {
+    main.java.srcDirs += 'build/generated-main-avro-java'
+}
