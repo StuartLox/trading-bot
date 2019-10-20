@@ -29,7 +29,7 @@ dependencies {
     //Springframework Dependencies
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
@@ -50,6 +50,8 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile "org.apache.avro:avro:1.8.2"
     compile 'io.confluent:kafka-streams-avro-serde:5.3.1'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9'
 
 }
 

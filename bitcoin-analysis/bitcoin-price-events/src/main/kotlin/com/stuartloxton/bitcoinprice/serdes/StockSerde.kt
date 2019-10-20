@@ -1,19 +1,19 @@
 package com.stuartloxton.bitcoinprice.serdes
 
-import com.stuartloxton.bitcoinprice.Stock
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serializer
+import org.slf4j.LoggerFactory
 
-class StockSerde : Serde<Stock> {
+class StockSerde : Serde<Stocks> {
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
     override fun close() {}
-    override fun deserializer(): Deserializer<Stock> = StockDeserializer()
-    override fun serializer(): Serializer<Stock> = StockSerializer()
+    override fun deserializer(): Deserializer<Stocks> = StockDeserializer()
+    override fun serializer(): Serializer<Stocks> = StockSerializer()
 }
 
-class StockSerializer : Serializer<Stock> {
-    override fun serialize(topic: String, data: Stock?): ByteArray? {
+class StockSerializer : Serializer<Stocks> {
+    override fun serialize(topic: String, data: Stocks?): ByteArray? {
         if (data == null) return null
         return jsonMapper.writeValueAsBytes(data)
     }
@@ -22,10 +22,13 @@ class StockSerializer : Serializer<Stock> {
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {}
 }
 
-class StockDeserializer : Deserializer<Stock> {
-    override fun deserialize(topic: String, data: ByteArray?): Stock? {
+class StockDeserializer : Deserializer<Stocks> {
+    private val log = LoggerFactory.getLogger(StockDeserializer::class.java)
+    override fun deserialize(topic: String, data: ByteArray?): Stocks? {
         if (data == null) return null
-        return jsonMapper.readValue(data, Stock::class.java)
+        val jm = jsonMapper.readValue(data, Stocks::class.java)
+        log.info(jm.toString() + "BLAHBLAH\n\n")
+        return jm
     }
 
     override fun close() {}
