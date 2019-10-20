@@ -4,7 +4,6 @@ import com.stuartloxton.bitcoinprice.AveragePrice
 import com.stuartloxton.bitcoinprice.Stock
 import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
-import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
@@ -22,11 +21,6 @@ import java.util.*
 @Component
 class Streams {
 
-
-
-    val avroSerde = GenericAvroSerde().apply {
-        configure(mapOf(Pair("schema.registry.url", "http://localhost:8081")), false)
-    }
 
     val stockSpecificAvroSerde = SpecificAvroSerde<Stock>()
     val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
