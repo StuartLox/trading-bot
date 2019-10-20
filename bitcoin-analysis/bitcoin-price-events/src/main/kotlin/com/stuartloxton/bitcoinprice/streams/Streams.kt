@@ -21,9 +21,8 @@ import java.util.*
 @Component
 class Streams {
 
-
-    val stockSpecificAvroSerde = SpecificAvroSerde<Stock>()
-    val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
+    private val stockSpecificAvroSerde = SpecificAvroSerde<Stock>()
+    private val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
 
     @Bean("kafkaStreamProcessing")
     fun startProcessing(@Qualifier("app1StreamBuilder")  builder: StreamsBuilder): KStream<String, AveragePrice> {
@@ -53,6 +52,5 @@ class Streams {
         btcAvroStream.to("another-topic-3", Produced.with(stringSerde, avgPriceSpecificAvroSerde))
 
         return btcAvroStream
-
     }
 }
