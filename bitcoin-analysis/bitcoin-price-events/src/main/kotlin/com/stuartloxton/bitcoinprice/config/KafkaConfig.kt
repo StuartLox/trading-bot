@@ -1,17 +1,27 @@
 package com.stuartloxton.bitcoinprice.config
 
 import com.stuartloxton.bitcoinprice.Stock
+import com.stuartloxton.bitcoinprice.serdes.GenericAvroDeserializer
+import com.stuartloxton.bitcoinprice.serdes.GenericAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializer
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.common.serialization.Serde
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsConfig
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration
+import org.springframework.kafka.config.KafkaStreamsConfiguration
+import org.springframework.kafka.config.StreamsBuilderFactoryBean
+import org.springframework.kafka.core.CleanupConfig
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.ProducerFactory
+
+
 
 
 @Configuration
@@ -48,9 +58,33 @@ class KafkaConfig {
 
     @Bean(name = arrayOf(KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME))
     fun kStreamsConfigs(): StreamsConfig {
+        val config = HashMap<String, Any>()
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "default")
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServerUrl)
+        return StreamsConfig(config)
+    }
+
+    fun setDefaults(config: HashMap<String, Any>): HashMap<String, Any> {
         val props = HashMap<String, Any>()
-        props[StreamsConfig.APPLICATION_ID_CONFIG] = "test-streams"
+        props[StreamsConfig.APPLICATION_ID_CONFIG] = "test-streams.v2"
         props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrapServerUrl
-        return StreamsConfig(props)
+        props[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = "org.apache.kafka.common.serialization.StringDeserializer"
+        props[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = "io.confluent.kafka.serializers.KafkaAvroDeserializer"
+        return props
+    }
+
+    @Bean("app1StreamBuilder")
+    fun app1StreamBuilderFactoryBean(): StreamsBuilderFactoryBean {
+        val stock: Serde<Stock> = Serdes.serdeFrom(GenericAvroSerializer(), GenericAvroDeserializer())
+        val config = HashMap<String, Any>()
+        setDefaults(config)
+        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, String::class.java)
+        config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, stock::class.java.getName())
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "someApp.v4")
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServerUrl)
+        config.put("schema.registry.url", "http://my-schema-registry:8081")
+        val factory = StreamsBuilderFactoryBean(KafkaStreamsConfiguration(config), CleanupConfig(true,true))
+        return factory
     }
 }

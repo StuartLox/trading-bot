@@ -82,6 +82,7 @@ class StockHandler(private val stockEventProducer: StockEventProducer) {
         return list
     }
 
+
     fun handleStocks(symbol: String): Unit {
         val json = sendGet(symbol)
         log.info(json)
