@@ -38,7 +38,6 @@ class Streams {
 
         fun emptyAveragePrice(): AveragePrice = AveragePrice.newBuilder().setAveragePrice(0.0).build()
 
-
         val btcAvroStream = builder.stream("bitcoin-price-aud.v8", Consumed.with(
             stringSerde,stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
@@ -50,8 +49,6 @@ class Streams {
             )
             .toStream()
             .selectKey{key,_ -> key.key()}
-
-
 
         btcAvroStream.to("another-topic-3", Produced.with(stringSerde, avgPriceSpecificAvroSerde))
 
