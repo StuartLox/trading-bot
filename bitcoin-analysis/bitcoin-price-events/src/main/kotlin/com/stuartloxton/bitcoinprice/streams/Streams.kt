@@ -2,6 +2,7 @@ package com.stuartloxton.bitcoinprice.streams
 
 import com.stuartloxton.bitcoinprice.AveragePrice
 import com.stuartloxton.bitcoinprice.Stock
+import com.stuartloxton.bitcoinprice.config.KafkaConfig
 import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
@@ -25,31 +26,51 @@ class Streams {
     private val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
 
     @Bean("kafkaStreamProcessing")
-    fun startProcessing(@Qualifier("app1StreamBuilder")  builder: StreamsBuilder): KStream<String, AveragePrice> {
+    fun startProcessing(@Qualifier("app1StreamBuilder")  builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<String, AveragePrice> {
 
-        stockSpecificAvroSerde.configure(Collections.singletonMap(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081"), false)
-        avgPriceSpecificAvroSerde.configure(Collections.singletonMap(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081"),false)
+        val defaultSerdeConfig = Collections.singletonMap(
+            KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
+            kafkaConfig.schemaRegistry)
 
-        val longSerde = Serdes.LongSerde()
+        stockSpecificAvroSerde.configure(defaultSerdeConfig, false)
+        avgPriceSpecificAvroSerde.configure(defaultSerdeConfig,false)
+
         val stringSerde = Serdes.StringSerde()
-        val doubleSerde = Serdes.DoubleSerde()
 
-        fun emptyAveragePrice(): AveragePrice = AveragePrice.newBuilder().setAveragePrice(0.0).build()
+        fun emptyAveragePrice(): AveragePrice = AveragePrice.newBuilder()
+            .setAveragePrice(0.0)
+            .build()
 
-        val btcAvroStream = builder.stream("bitcoin-price-aud.v8", Consumed.with(
+        fun averagePriceAggregator(newStock: Stock, currentAveragePrice: AveragePrice): AveragePrice {
+            val averagePriceBuilder: AveragePrice.Builder = AveragePrice.newBuilder(currentAveragePrice)
+            // Calc Fields
+            val sumWindow = currentAveragePrice.getAveragePrice() + newStock.getClose()
+            val countWindow = currentAveragePrice.getCountWindow() + 1
+            val calcAvgPrice = sumWindow / countWindow
+
+            // Set Fields
+            val newAveragePrice = averagePriceBuilder
+                .setSumWindow(sumWindow)
+                .setCountWindow(countWindow)
+                .setAveragePrice(calcAvgPrice)
+
+            // Build new AveragePrice object
+            return newAveragePrice.build()
+        }
+
+        val movingAvgPrice = builder.stream(kafkaConfig.btc_event_topic, Consumed.with(
             stringSerde,stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
             .groupByKey()
             .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.day).toMillis()))
             .aggregate(
                 { emptyAveragePrice() },
-                { _, stc, aggregate -> AveragePrice.newBuilder().setAveragePrice(aggregate.getAveragePrice() + stc.getClose()).build() }
+                { _, stc, aggregate -> averagePriceAggregator(stc, aggregate) }
             )
             .toStream()
             .selectKey{key,_ -> key.key()}
 
-        btcAvroStream.to("another-topic-3", Produced.with(stringSerde, avgPriceSpecificAvroSerde))
-
-        return btcAvroStream
+        movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(stringSerde, avgPriceSpecificAvroSerde))
+        return movingAvgPrice
     }
 }
