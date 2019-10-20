@@ -27,7 +27,6 @@ class Streams {
     @Bean("kafkaStreamProcessing")
     fun startProcessing(@Qualifier("app1StreamBuilder")  builder: StreamsBuilder): KStream<String, AveragePrice> {
 
-
         stockSpecificAvroSerde.configure(Collections.singletonMap(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081"), false)
         avgPriceSpecificAvroSerde.configure(Collections.singletonMap(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081"),false)
 
