@@ -1,6 +1,7 @@
 package com.stuartloxton.bitcoinprice.streams
 
 import com.stuartloxton.bitcoinprice.AveragePrice
+import com.stuartloxton.bitcoinprice.AveragePriceWindow
 import com.stuartloxton.bitcoinprice.Stock
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
 import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
@@ -24,16 +25,18 @@ class Streams {
 
     private val stockSpecificAvroSerde = SpecificAvroSerde<Stock>()
     private val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
+    private val avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>()
 
     @Bean("kafkaStreamProcessing")
-    fun startProcessing(@Qualifier("app1StreamBuilder")  builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<String, AveragePrice> {
+    fun startProcessing(@Qualifier("app1StreamBuilder")  builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<AveragePriceWindow, AveragePrice> {
 
         val defaultSerdeConfig = Collections.singletonMap(
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
-            kafkaConfig.schemaRegistry)
+            kafkaConfig.schemaRegistryUrl)
 
         stockSpecificAvroSerde.configure(defaultSerdeConfig, false)
         avgPriceSpecificAvroSerde.configure(defaultSerdeConfig,false)
+        avgPriceWindowSpecificAvroSerde.configure(defaultSerdeConfig,true)
 
         val stringSerde = Serdes.StringSerde()
 
@@ -60,8 +63,16 @@ class Streams {
             return newAveragePrice.build()
         }
 
-        val movingAvgPrice = builder.stream(kafkaConfig.btc_event_topic, Consumed.with(
-            stringSerde,stockSpecificAvroSerde,
+        fun averagePriceWindowBuilder(symbol: String, windowEnd: Long): AveragePriceWindow {
+            val avgPriceWindow = AveragePriceWindow.newBuilder()
+                .setSymbol(symbol)
+                .setWindowEnd(windowEnd)
+                .build()
+            return avgPriceWindow
+        }
+
+        val movingAvgPrice: KStream<AveragePriceWindow, AveragePrice> = builder.stream(kafkaConfig.btc_event_topic, Consumed.with(
+            stringSerde, stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
             .groupByKey()
             .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.day).toMillis()))
@@ -70,9 +81,9 @@ class Streams {
                 { _, stc, aggregate -> averagePriceAggregator(stc, aggregate) }
             )
             .toStream()
-            .selectKey{key,_ -> key.key()}
+            .selectKey{ key, v -> averagePriceWindowBuilder(key.key(), key.window().end())}
 
-        movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(stringSerde, avgPriceSpecificAvroSerde))
+        movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
         return movingAvgPrice
     }
 }

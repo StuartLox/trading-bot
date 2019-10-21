@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "AveragePriceWindow",
+  "namespace": "com.stuartloxton.bitcoinprice",
+  "fields": [
+    {
+        "name": "symbol",
+        "type": "string"
+    },
+    {
+        "name": "windowEnd",
+        "type": "long"
+    }
+  ]
+}
