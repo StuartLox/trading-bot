@@ -39,6 +39,8 @@ class Streams {
 
         fun emptyAveragePrice(): AveragePrice = AveragePrice.newBuilder()
             .setAveragePrice(0.0)
+            .setSumWindow(0.0)
+            .setCountWindow(0)
             .build()
 
         fun averagePriceAggregator(newStock: Stock, currentAveragePrice: AveragePrice): AveragePrice {

@@ -13,7 +13,7 @@
     },
     {
         "name": "countWindow",
-        "type": "double"
+        "type": "int"
     }
   ]
 }
