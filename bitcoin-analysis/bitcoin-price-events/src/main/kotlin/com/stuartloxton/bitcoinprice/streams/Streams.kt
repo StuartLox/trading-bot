@@ -81,7 +81,7 @@ class Streams {
                 { _, stc, aggregate -> averagePriceAggregator(stc, aggregate) }
             )
             .toStream()
-            .selectKey{ key, v -> averagePriceWindowBuilder(key.key(), key.window().end())}
+            .selectKey{ key, _ -> averagePriceWindowBuilder(key.key(), key.window().end())}
 
         movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
         return movingAvgPrice
