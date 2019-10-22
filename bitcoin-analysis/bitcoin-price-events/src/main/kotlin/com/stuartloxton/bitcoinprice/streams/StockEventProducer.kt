@@ -19,7 +19,7 @@ class StockEventProducer(private val kafkaTemplate: KafkaTemplate<String, Stock>
         var success = false
         try {
             log.info(stock.toString())
-            kafkaTemplate.send(kafkaProducerTopic, stock.symbol, stock)
+            kafkaTemplate.send(kafkaProducerTopic, stock.getSymbol(), stock)
             success = true
         } catch (e: Exception) {
             log.error("Exception in StockEvent.||StockEventProducer $e")
