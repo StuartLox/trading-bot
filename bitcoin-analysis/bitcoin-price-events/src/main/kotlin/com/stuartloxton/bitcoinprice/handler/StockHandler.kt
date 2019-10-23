@@ -103,5 +103,6 @@ class StockHandler(private val stockEventProducer: StockEventProducer) {
 
     fun publishStockEvents(stock: Stock) {
         val success = stockEventProducer.stockEventProducer(stock)
+        log.debug(success.toString())
     }
 }

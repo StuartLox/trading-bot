@@ -1,0 +1,11 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+application:
+  kafka:
+    btc-event-topic: ${BTC_EVENT_TOPIC}
+    avg-price-topic: ${AVG_PRICE_TOPIC}
+    bootstrap: ${KAFKA_BOOTSTRAP_SERVERS}
+    schema-registry: ${SCHEMA_REGISTRY_URL}
+    group-id: ${STREAMS_BTC_GROUPID}

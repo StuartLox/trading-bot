@@ -6,6 +6,14 @@
     {
         "name": "averagePrice",
         "type": "double"
-     }
+    },
+    {
+        "name": "sumWindow",
+        "type": "double"
+    },
+    {
+        "name": "countWindow",
+        "type": "int"
+    }
   ]
 }
