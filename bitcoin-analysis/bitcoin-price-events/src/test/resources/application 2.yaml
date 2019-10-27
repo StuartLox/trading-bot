@@ -1,7 +1,0 @@
-application:
-  kafka:
-    btc-event-topic: "btc-event-topic"
-    avg-price-topic: "avg-price-topic"
-    bootstrap: "${spring.embedded.kafka.brokers:localhost:9092}"
-    schema-registry: "http://localhost:8081"
-    group-id: "streams-app"
