@@ -89,8 +89,6 @@ class StreamTest {
 
         val builder = StreamsBuilder()
         val input = builder.stream(INPUT_TOPIC, Consumed.with(stringSerde, stockSpecificAvroSerde))
-
-
         val config = getStreamsConfiguration()
         testDriver = TopologyTestDriver(builder.build(), config)
 

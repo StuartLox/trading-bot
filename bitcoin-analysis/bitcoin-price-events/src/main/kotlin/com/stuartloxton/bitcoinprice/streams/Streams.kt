@@ -33,6 +33,7 @@ class Streams {
     private val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
     private val avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>()
 
+
     fun startProcessing(): KStream<AveragePriceWindow, AveragePrice> {
 
         val defaultSerdeConfig = Collections.singletonMap(
