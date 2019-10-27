@@ -49,7 +49,7 @@ dependencies {
     implementation("org.json:json:20190722")
 
     //Test Dependencies
-    implementation("org.apache.kafka:kafka-streams-test-utils:2.1.0")
+    implementation("org.apache.kafka:kafka-streams-test-utils:2.0.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")

@@ -12,7 +12,6 @@ import org.springframework.test.context.junit4.SpringRunner
 
 @SpringBootTest
 @RunWith(SpringRunner::class)
-
 class KafkaListenerConfigTest {
     companion object {
         @ClassRule

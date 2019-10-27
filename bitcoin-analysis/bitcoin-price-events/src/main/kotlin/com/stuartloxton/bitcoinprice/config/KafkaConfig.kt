@@ -77,4 +77,6 @@ class KafkaConfig {
         val factory = StreamsBuilderFactoryBean(KafkaStreamsConfiguration(config), CleanupConfig(true,true))
         return factory
     }
+
+
 }

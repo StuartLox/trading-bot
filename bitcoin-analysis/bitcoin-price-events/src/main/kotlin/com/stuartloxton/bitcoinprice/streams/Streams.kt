@@ -13,8 +13,8 @@ import org.apache.kafka.streams.kstream.Consumed
 import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.Produced
 import org.apache.kafka.streams.kstream.TimeWindows
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.util.*
@@ -23,12 +23,17 @@ import java.util.*
 @Component
 class Streams {
 
+    @Autowired
+    @Qualifier("app1StreamBuilder")
+    private lateinit var builder: StreamsBuilder
+
+    private lateinit var kafkaConfig: KafkaConfig
+
     private val stockSpecificAvroSerde = SpecificAvroSerde<Stock>()
     private val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
     private val avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>()
 
-    @Bean("kafkaStreamProcessing")
-    fun startProcessing(@Qualifier("app1StreamBuilder")  builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<AveragePriceWindow, AveragePrice> {
+    fun startProcessing(): KStream<AveragePriceWindow, AveragePrice> {
 
         val defaultSerdeConfig = Collections.singletonMap(
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
