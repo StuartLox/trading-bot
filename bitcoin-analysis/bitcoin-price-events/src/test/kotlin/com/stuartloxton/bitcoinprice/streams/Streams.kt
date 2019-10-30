@@ -156,6 +156,7 @@ class StreamTest {
         testDriver.pipeInput(factory.create(kafkaConfigProperties.btc_event_topic, stock1.getSymbol(), stock1, 1L ))
         testDriver.pipeInput(factory.create(kafkaConfigProperties.btc_event_topic, stock2.getSymbol(), stock2, 1L))
         testDriver.pipeInput(factory.create(kafkaConfigProperties.btc_event_topic, stock2.getSymbol(), stock2, 1L))
+        testDriver.advanceWallClockTime(20L)
         val output1 = readOutput()
         val output2 = readOutput()
         val output3 = readOutput()
