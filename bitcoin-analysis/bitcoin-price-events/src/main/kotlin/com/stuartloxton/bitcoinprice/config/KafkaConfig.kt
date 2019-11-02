@@ -63,8 +63,7 @@ class KafkaConfig {
         return KafkaTemplate(producerFactory())
     }
 
-    @Bean("app1StreamBuilder")
-    fun app1StreamBuilderFactoryBean(): StreamsBuilderFactoryBean {
+    fun getStreamsConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, groupId)
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
@@ -74,9 +73,13 @@ class KafkaConfig {
         config.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, StockTimestampExtractor::class.java)
         config.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE)
         config.put("schema.registry.url", schemaRegistryUrl)
+        return config
+    }
+
+    @Bean("app1StreamBuilder")
+    fun app1StreamBuilderFactoryBean(): StreamsBuilderFactoryBean {
+        val config = getStreamsConfig()
         val factory = StreamsBuilderFactoryBean(KafkaStreamsConfiguration(config), CleanupConfig(true,true))
         return factory
     }
-
-
 }

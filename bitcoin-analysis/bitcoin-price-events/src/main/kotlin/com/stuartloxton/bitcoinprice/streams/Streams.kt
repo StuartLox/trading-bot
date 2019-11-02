@@ -21,6 +21,8 @@ import java.time.Duration
 import java.util.*
 
 
+
+
 @Service
 @Transactional
 class Streams {
@@ -30,14 +32,16 @@ class Streams {
     private lateinit var builder: StreamsBuilder
 
     private lateinit var kafkaConfig: KafkaConfig
-
     private val stockSpecificAvroSerde = SpecificAvroSerde<Stock>()
     private val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
     private val avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>()
 
+    fun startProccessing() {
+        val builder = streamsBuilder()
+        builder.build()
+    }
 
-    fun startProcessing(): KStream<AveragePriceWindow, AveragePrice> {
-
+    fun streamsBuilder(): StreamsBuilder {
         val defaultSerdeConfig = Collections.singletonMap(
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
             kafkaConfig.schemaRegistryUrl)
@@ -92,6 +96,6 @@ class Streams {
             .selectKey{ key, _ -> averagePriceWindowBuilder(key.key(), key.window().end())}
 
         movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
-        return movingAvgPrice
+        return builder
     }
 }
