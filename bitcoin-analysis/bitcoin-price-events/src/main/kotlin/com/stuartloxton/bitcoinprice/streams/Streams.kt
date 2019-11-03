@@ -19,10 +19,6 @@ import java.time.Duration
 import java.util.*
 
 
-
-
-
-
 @Component
 class Streams {
 
@@ -38,7 +34,6 @@ class Streams {
     @Bean("kafkaStreamProcessing")
     fun startProccessing(@Qualifier("app1StreamBuilder") builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<AveragePriceWindow, AveragePrice> {
         return streamsBuilder(builder, kafkaConfig, schemaRegistryClient)
-
     }
 
     fun streamsBuilder(builder: StreamsBuilder, kafkaConfig: KafkaConfig, schemaRegistryClient: SchemaRegistryClient?): KStream<AveragePriceWindow, AveragePrice>  {
