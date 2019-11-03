@@ -72,10 +72,10 @@ class StreamsTest {
 
     //Generates test inputs.
     fun setStockList(baseTimestamp: Long){
-        val basePrice = 100.0
+        val baseClosePrice = 100.0
         for (i in 0..5) {
             val timestamp = baseTimestamp + (i * 20L)
-            val close = basePrice + (i * 20.0)
+            val close = baseClosePrice + (i * 20.0)
             val stock = Stock(
                 "BTC-AUD", timestamp,
                 100.0,100.0,100.0,
