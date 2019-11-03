@@ -3,10 +3,8 @@ package com.stuartloxton.bitcoinprice.config
 import com.stuartloxton.bitcoinprice.Stock
 import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
 import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -63,20 +61,23 @@ class KafkaConfig {
         return KafkaTemplate(producerFactory())
     }
 
-    @Bean("app1StreamBuilder")
-    fun app1StreamBuilderFactoryBean(): StreamsBuilderFactoryBean {
+    fun getStreamsConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, groupId)
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
-        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String()::class.java)
-        config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde::class.java)
+//        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String()::class.java)
+//        config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde::class.java)
         config.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, StockTimestampExtractor::class.java)
-        config.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE)
+//        config.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE)
         config.put("schema.registry.url", schemaRegistryUrl)
+        return config
+    }
+
+    @Bean("app1StreamBuilder")
+    fun app1StreamBuilderFactoryBean(): StreamsBuilderFactoryBean {
+        val config = getStreamsConfig()
         val factory = StreamsBuilderFactoryBean(KafkaStreamsConfiguration(config), CleanupConfig(true,true))
         return factory
     }
-
-
 }
