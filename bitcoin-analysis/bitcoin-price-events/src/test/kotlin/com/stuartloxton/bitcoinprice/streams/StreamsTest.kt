@@ -4,88 +4,140 @@ import com.stuartloxton.bitcoinprice.AveragePrice
 import com.stuartloxton.bitcoinprice.AveragePriceWindow
 import com.stuartloxton.bitcoinprice.Stock
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
-import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertNotNull
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.TopologyTestDriver
-import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.test.ConsumerRecordFactory
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
-import java.time.Duration
 import java.util.*
 
 
-
-@EnableConfigurationProperties(value=[KafkaConfig::class])
-@DirtiesContext
-@ActiveProfiles("development")
-@SpringBootTest
 @RunWith(SpringRunner::class)
+@SpringBootTest(classes = [KafkaConfig::class],
+    properties = [
+        "application.kafka.btc-event-topic=test-btc-event-topic",
+        "application.kafka.avg-price-topic=test-avg-price-topic",
+        "application.kafka.bootstrap=dummy.bootstrap.com.localhost:9092",
+        "application.kafka.schema-registry=http://mock-registry:8081",
+        "application.kafka.group-id=streams-app.v1"
+    ])
 class StreamsTest {
     @Autowired
     private lateinit var kafkaConfigProperties: KafkaConfig
 
-    @MockBean
-    private lateinit var stockEventProducer: StockEventProducer
-
-    @MockBean
-    private lateinit var streams: Streams
-
-    @MockBean
     private lateinit var testDriver: TopologyTestDriver
-
 
     val schemaRegistryClient: SchemaRegistryClient = MockSchemaRegistryClient()
 
-    val stringSerde = Serdes.StringSerde()
-
-    val INPUT_TOPIC = "TestTopicInput"
-    val OUTPUT_TOPIC = "TestTopicOutput"
-    private var schemaRegistryUrl = "http://dummy:8081"
-
+    //Init Serdes
     private var stockSpecificAvroSerde = SpecificAvroSerde<Stock>(schemaRegistryClient)
     private var avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>(schemaRegistryClient)
     private var avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>(schemaRegistryClient)
+    private var stringSerde = Serdes.StringSerde()
 
-    @Before
-    fun setup() {
-        val defaultSerdeConfig = Collections.singletonMap(
-            KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl)
+    //Data I/O
+    private var stockList = ArrayList<Stock>()
+    private var outputs = ArrayList<ProducerRecord<AveragePriceWindow, AveragePrice>>()
 
-        stockSpecificAvroSerde.configure(defaultSerdeConfig, false)
-        avgPriceSpecificAvroSerde.configure(defaultSerdeConfig,false)
-        avgPriceWindowSpecificAvroSerde.configure(defaultSerdeConfig,true)
+    /******************
+     * UTIL FUNCTIONS
+     *****************/
 
-        val builder = startProcessing()
+    //Pipes data into testDriver
+    fun pipeTestData() {
+        val factory = ConsumerRecordFactory<String, Stock>(
+            stringSerde.serializer(), stockSpecificAvroSerde.serializer())
 
+        for (i in 0 until stockList.size){
+            val record = factory.create(
+                kafkaConfigProperties.btc_event_topic,
+                stockList[i].getSymbol(), stockList[i])
+            testDriver.pipeInput(record)
+        }
+        testDriver.advanceWallClockTime(1000L)
+    }
 
+    //Generates test inputs.
+    fun setStockList(baseTimestamp: Long){
+        val basePrice = 100.0
+        for (i in 0..5) {
+            val timestamp = baseTimestamp + (i * 20L)
+            val close = basePrice + (i * 20.0)
+            val stock = Stock(
+                "BTC-AUD", timestamp,
+                100.0,100.0,100.0,
+                close, 100.0
+            )
+            stockList.add(stock)
+        }
+    }
+
+    fun setOutputs(){
+        for (i in 0 until stockList.size) {
+            val streamsEvent = testDriver.readOutput(
+                kafkaConfigProperties.avg_price_topic,
+                avgPriceWindowSpecificAvroSerde.deserializer(),
+                avgPriceSpecificAvroSerde.deserializer()
+            )
+           outputs.add(streamsEvent)
+        }
+    }
+
+    fun testTopologyBuilder(){
+        val builder = StreamsBuilder()
+        val streams = Streams()
+        streams.streamsBuilder(builder, kafkaConfigProperties, schemaRegistryClient)
         val props = Properties()
         props.putAll(kafkaConfigProperties.getStreamsConfig())
 
         testDriver = TopologyTestDriver(builder.build(), props)
     }
 
-    fun readOutput(): ProducerRecord<AveragePriceWindow, AveragePrice> {
-        val output = testDriver.readOutput(kafkaConfigProperties.avg_price_topic,
-            avgPriceWindowSpecificAvroSerde.deserializer(), avgPriceSpecificAvroSerde.deserializer())
-        return output
+    fun configureSerdes(){
+        val defaultSerdeConfig = Collections.singletonMap(
+            KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, kafkaConfigProperties.schemaRegistryUrl)
+
+        stockSpecificAvroSerde.configure(defaultSerdeConfig, false)
+        avgPriceSpecificAvroSerde.configure(defaultSerdeConfig,false)
+        avgPriceWindowSpecificAvroSerde.configure(defaultSerdeConfig,true)
+    }
+
+    /*********
+     * TESTS
+     *********/
+
+    @Before
+    fun setup() {
+        configureSerdes()
+
+        // Init topology testDriver
+        testTopologyBuilder()
+
+        // Define two sets of Stock objects
+        // from two distinct windows for testing.
+        val window1 = 1570752000L
+        val window2 = window1 + 86400L
+
+        setStockList(window1)
+        setStockList(window2)
+
+        // Pipe data into testDriver and
+        // extract outputs.
+        pipeTestData()
+        setOutputs()
     }
 
     @After
@@ -99,97 +151,65 @@ class StreamsTest {
     }
 
     @Test
-    fun testSend(){
-        val stock1 = Stock(
-            "BTC-AUD",1572177505L,
-            100.0,100.0,100.0,
-            200.0,100.0
-        )
-
-        val stock2 = Stock(
-            "BTC-AUD",157222079L,
-            100.0,100.0,100.0,
-            110.0,100.0
-        )
-
-        val stockSerializer = stockSpecificAvroSerde.serializer()
-        stockSerializer.configure(Collections.singletonMap(
-            KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl), false)
-
-        val factory = ConsumerRecordFactory<String, Stock>(stringSerde.serializer(), stockSerializer)
-        val record1 = factory.create(kafkaConfigProperties.btc_event_topic, stock1.getSymbol(), stock1 )
-        val record2 = factory.create(kafkaConfigProperties.btc_event_topic, stock2.getSymbol(), stock2)
-
-        testDriver.pipeInput(factory.create(kafkaConfigProperties.btc_event_topic, stock1.getSymbol(), stock1, 1L ))
-        testDriver.pipeInput(factory.create(kafkaConfigProperties.btc_event_topic, stock2.getSymbol(), stock2, 2L))
-        testDriver.pipeInput(factory.create(kafkaConfigProperties.btc_event_topic, stock2.getSymbol(), stock2, 3L))
-        testDriver.advanceWallClockTime(20L)
-
-        val output1 = readOutput()
-        val output2 = readOutput()
-
-        assertNotNull(output1)
-        assertNotNull(output2)
-
-
-        assertEquals("BTC-AUD", output1.key().getSymbol())
-        assertEquals(1572220800000L, output1.key().getWindowEnd())
-        assertEquals(1, output1.value().getCountWindow())
-        assertEquals(110.0, output2.value().getAveragePrice())
+    fun assertStreamsNotNull() {
+        for (i in 0 until stockList.size) {
+            assertNotNull(outputs[i])
+        }
     }
 
-    fun startProcessing(): StreamsBuilder {
-        val builder = StreamsBuilder()
+    @Test
+    fun testFirstEvent(){
+        val avgPriceKey = outputs[0].key()
+        val avgPriceValue = outputs[0].value()
 
-        val stringSerde = Serdes.StringSerde()
+        //Test Key
+        assertEquals("BTC-AUD", avgPriceKey.getSymbol())
+        assertEquals(1570838400000, avgPriceKey.getWindowEnd())
 
+        //Test Value
+        assertEquals(1, avgPriceValue.getCountWindow())
+        assertEquals(100.0, avgPriceValue.getSumWindow(), 0.0)
+        assertEquals(100.0, avgPriceValue.getAveragePrice(), 0.0)
+    }
 
-        fun emptyAveragePrice(): AveragePrice = AveragePrice.newBuilder()
-            .setAveragePrice(0.0)
-            .setSumWindow(0.0)
-            .setCountWindow(0)
-            .build()
+    @Test
+    fun testSecondEvent(){
+        val avgPriceKey = outputs[1].key()
+        val avgPriceValue = outputs[1].value()
 
-        fun averagePriceAggregator(newStock: Stock, currentAveragePrice: AveragePrice): AveragePrice {
-            val averagePriceBuilder: AveragePrice.Builder = AveragePrice.newBuilder(currentAveragePrice)
-            // Calc Fields
-            val sumWindow = currentAveragePrice.getAveragePrice() + newStock.getClose()
-            val countWindow = currentAveragePrice.getCountWindow() + 1
-            val calcAvgPrice = sumWindow / countWindow
+        //Test Key
+        assertEquals(1570838400000, avgPriceKey.getWindowEnd())
 
-            // Set Fields
-            val newAveragePrice = averagePriceBuilder
-                .setSumWindow(sumWindow)
-                .setCountWindow(countWindow)
-                .setAveragePrice(calcAvgPrice)
+        //Test Value
+        assertEquals(2, avgPriceValue.getCountWindow())
+        assertEquals(220.0, avgPriceValue.getSumWindow(),0.0)
+        assertEquals(110.0, avgPriceValue.getAveragePrice(),0.0)
+    }
 
-            // Build new AveragePrice object
-            return newAveragePrice.build()
-        }
+    @Test
+    fun testThirdEvent(){
+        val avgPriceKey = outputs[2].key()
+        val avgPriceValue = outputs[2].value()
 
-        fun averagePriceWindowBuilder(symbol: String, windowEnd: Long): AveragePriceWindow {
-            val avgPriceWindow = AveragePriceWindow.newBuilder()
-                .setSymbol(symbol)
-                .setWindowEnd(windowEnd)
-                .build()
-            return avgPriceWindow
-        }
+        //Test Key
+        assertEquals(1570838400000, avgPriceKey.getWindowEnd())
 
-        val movingAvgPrice: KStream<AveragePriceWindow, AveragePrice> = builder.stream(kafkaConfigProperties.btc_event_topic, Consumed.with(
-            stringSerde, stockSpecificAvroSerde,
-            StockTimestampExtractor(), null))
-            .groupByKey(
-                Serialized.with(stringSerde, stockSpecificAvroSerde))
-            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.day).toMillis()))
-            .aggregate(
-                { emptyAveragePrice() },
-                { _, stc, aggregate -> averagePriceAggregator(stc, aggregate)},
-                Materialized.with(stringSerde,avgPriceSpecificAvroSerde)
-            )
-            .toStream()
-            .selectKey{ key, _ -> averagePriceWindowBuilder(key.key(), key.window().end())}
+        //Test Value
+        assertEquals(3, avgPriceValue.getCountWindow())
+        assertEquals(360.0, avgPriceValue.getSumWindow(),0.0)
+        assertEquals(120.0, avgPriceValue.getAveragePrice(),0.0)
+    }
 
-        movingAvgPrice.to(kafkaConfigProperties.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
-        return builder
+    @Test
+    fun testSecondWindow(){
+        val avgPriceKey = outputs[6].key()
+        val avgPriceValue = outputs[6].value()
+
+        //Test Key
+        assertEquals(1570924800000, avgPriceKey.getWindowEnd())
+
+        //Test Value
+        assertEquals(100.0, avgPriceValue.getSumWindow(), 0.0)
+        assertEquals(100.0, avgPriceValue.getAveragePrice(), 0.0)
     }
 }

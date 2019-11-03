@@ -5,43 +5,47 @@ import com.stuartloxton.bitcoinprice.AveragePriceWindow
 import com.stuartloxton.bitcoinprice.Stock
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
 import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
-import org.apache.kafka.streams.kstream.Consumed
-import org.apache.kafka.streams.kstream.KStream
-import org.apache.kafka.streams.kstream.Produced
-import org.apache.kafka.streams.kstream.TimeWindows
+import org.apache.kafka.streams.kstream.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.context.annotation.Bean
+import org.springframework.stereotype.Component
 import java.time.Duration
 import java.util.*
 
 
 
 
-@Service
-@Transactional
+
+
+@Component
 class Streams {
 
     @Autowired
     @Qualifier("app1StreamBuilder")
     private lateinit var builder: StreamsBuilder
 
+    @Autowired
     private lateinit var kafkaConfig: KafkaConfig
-    private val stockSpecificAvroSerde = SpecificAvroSerde<Stock>()
-    private val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>()
-    private val avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>()
 
-    fun startProccessing() {
-        val builder = streamsBuilder()
-        builder.build()
+    private val schemaRegistryClient: SchemaRegistryClient? = null
+
+    @Bean("kafkaStreamProcessing")
+    fun startProccessing(@Qualifier("app1StreamBuilder") builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<AveragePriceWindow, AveragePrice> {
+        return streamsBuilder(builder, kafkaConfig, schemaRegistryClient)
+
     }
 
-    fun streamsBuilder(): StreamsBuilder {
+    fun streamsBuilder(builder: StreamsBuilder, kafkaConfig: KafkaConfig, schemaRegistryClient: SchemaRegistryClient?): KStream<AveragePriceWindow, AveragePrice>  {
+        val stockSpecificAvroSerde = SpecificAvroSerde<Stock>(schemaRegistryClient)
+        val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>(schemaRegistryClient)
+        val avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>(schemaRegistryClient)
+
         val defaultSerdeConfig = Collections.singletonMap(
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
             kafkaConfig.schemaRegistryUrl)
@@ -61,7 +65,7 @@ class Streams {
         fun averagePriceAggregator(newStock: Stock, currentAveragePrice: AveragePrice): AveragePrice {
             val averagePriceBuilder: AveragePrice.Builder = AveragePrice.newBuilder(currentAveragePrice)
             // Calc Fields
-            val sumWindow = currentAveragePrice.getAveragePrice() + newStock.getClose()
+            val sumWindow = currentAveragePrice.getSumWindow() + newStock.getClose()
             val countWindow = currentAveragePrice.getCountWindow() + 1
             val calcAvgPrice = sumWindow / countWindow
 
@@ -86,16 +90,18 @@ class Streams {
         val movingAvgPrice: KStream<AveragePriceWindow, AveragePrice> = builder.stream(kafkaConfig.btc_event_topic, Consumed.with(
             stringSerde, stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
-            .groupByKey()
+            .groupByKey(
+                Serialized.with(stringSerde, stockSpecificAvroSerde))
             .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.day).toMillis()))
             .aggregate(
                 { emptyAveragePrice() },
-                { _, stc, aggregate -> averagePriceAggregator(stc, aggregate) }
+                { _, stc, aggregate -> averagePriceAggregator(stc, aggregate)},
+                Materialized.with(stringSerde,avgPriceSpecificAvroSerde)
             )
             .toStream()
             .selectKey{ key, _ -> averagePriceWindowBuilder(key.key(), key.window().end())}
 
         movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
-        return builder
+        return movingAvgPrice
     }
 }
