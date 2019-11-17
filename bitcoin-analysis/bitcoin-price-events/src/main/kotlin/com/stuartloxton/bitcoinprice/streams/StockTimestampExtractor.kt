@@ -1,4 +1,4 @@
-package com.stuartloxton.bitcoinprice.serdes
+package com.stuartloxton.bitcoinprice.streams
 
 import com.stuartloxton.bitcoinprice.Stock
 import org.apache.kafka.clients.consumer.ConsumerRecord

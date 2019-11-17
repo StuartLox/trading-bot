@@ -24,6 +24,9 @@ sourceSets {
     main.java.srcDirs += 'build/generated-main-avro-java/com/stuartloxton/bitcoinprice/Stock'
 }
 
+ext.kafkaVersion = "2.3.1"
+ext.confluentVersion = "5.3.1"
+
 dependencies {
     implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
@@ -34,10 +37,10 @@ dependencies {
 
     //Kafka Dependencies
     implementation("io.projectreactor.kafka:reactor-kafka:1.1.0.RELEASE")
-    implementation("org.apache.kafka:kafka-streams:2.0.0")
-    implementation("org.apache.kafka:kafka-clients:2.0.0")
-    implementation("io.confluent:kafka-avro-serializer:5.3.0")
-    implementation("org.apache.avro:avro:1.9.0")
+    implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
+    implementation("org.apache.kafka:kafka-clients:$kafkaVersion")
+    implementation("io.confluent:kafka-avro-serializer:$confluentVersion")
+    implementation("org.apache.avro:avro:1.9.1")
     implementation("org.springframework.kafka:spring-kafka:2.2.0.RELEASE")
 
     //Deeplearning4j Dependencies
@@ -49,14 +52,14 @@ dependencies {
     implementation("org.json:json:20190722")
 
     //Test Dependencies
-    implementation("org.apache.kafka:kafka-streams-test-utils:2.0.0")
+    implementation("org.apache.kafka:kafka-streams-test-utils:$kafkaVersion")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile "org.apache.avro:avro:1.8.2"
+    compile "org.apache.avro:avro:1.9.1"
     compile 'io.confluent:kafka-streams-avro-serde:5.3.1'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9'

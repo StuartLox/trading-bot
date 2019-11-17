@@ -4,35 +4,25 @@ import com.stuartloxton.bitcoinprice.AveragePrice
 import com.stuartloxton.bitcoinprice.AveragePriceWindow
 import com.stuartloxton.bitcoinprice.Stock
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
-import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.*
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.util.*
 
-
 @Component
 class Streams {
 
-    @Autowired
-    @Qualifier("app1StreamBuilder")
-    private lateinit var builder: StreamsBuilder
-
-    @Autowired
-    private lateinit var kafkaConfig: KafkaConfig
-
-    private val schemaRegistryClient: SchemaRegistryClient? = null
-
     @Bean("kafkaStreamProcessing")
     fun startProccessing(@Qualifier("app1StreamBuilder") builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<AveragePriceWindow, AveragePrice> {
+        val schemaRegistryClient: SchemaRegistryClient = CachedSchemaRegistryClient(kafkaConfig.schemaRegistryUrl, 3)
         return streamsBuilder(builder, kafkaConfig, schemaRegistryClient)
     }
 
@@ -85,9 +75,8 @@ class Streams {
         val movingAvgPrice: KStream<AveragePriceWindow, AveragePrice> = builder.stream(kafkaConfig.btc_event_topic, Consumed.with(
             stringSerde, stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
-            .groupByKey(
-                Serialized.with(stringSerde, stockSpecificAvroSerde))
-            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.day).toMillis()))
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.day)))
             .aggregate(
                 { emptyAveragePrice() },
                 { _, stc, aggregate -> averagePriceAggregator(stc, aggregate)},

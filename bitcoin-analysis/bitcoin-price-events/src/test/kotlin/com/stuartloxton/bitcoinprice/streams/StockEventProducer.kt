@@ -12,11 +12,11 @@ import org.springframework.test.context.junit4.SpringRunner
 
 @SpringBootTest
 @RunWith(SpringRunner::class)
-class KafkaListenerConfigTest {
+class StockEventProducerTest {
     companion object {
         @ClassRule
         @JvmField
-        val embeddedKafka = EmbeddedKafkaRule(1, false, "demo-topic")
+        val embeddedKafka = EmbeddedKafkaRule(1, false, "btc-event-topic")
     }
 
     @MockBean
@@ -24,7 +24,6 @@ class KafkaListenerConfigTest {
 
     @MockBean
     private lateinit var stockEventProducer: StockEventProducer
-
 
     @Test
     fun testSend(){

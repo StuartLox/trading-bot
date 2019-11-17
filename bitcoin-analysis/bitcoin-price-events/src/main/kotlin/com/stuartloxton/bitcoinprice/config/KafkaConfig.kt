@@ -1,7 +1,7 @@
 package com.stuartloxton.bitcoinprice.config
 
 import com.stuartloxton.bitcoinprice.Stock
-import com.stuartloxton.bitcoinprice.serdes.StockTimestampExtractor
+import com.stuartloxton.bitcoinprice.streams.StockTimestampExtractor
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
