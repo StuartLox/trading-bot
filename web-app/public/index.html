@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>UKOUG 2017 - Tech, Apps and JDE Tweet Master</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+        function toggle(elementId) {
+           var elementToToggle =  document.getElementById(elementId);
+           elementToToggle.style.display = elementToToggle.style.display=='none'?'':'none'; 
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <h1>UKOUG 2017 Tech, Apps and JDE Tweet Board</h1>
+        <br/>
+        <!-- output is container used by sse-handler -->
+        <div id="output">
+        </div>
+        <a href="#" onclick="toggle('recentTweetLikes')">Toggle Recent Tweet Likes</a>
+        <div id="recentTweetLikes"  style="display:none">
+            <h2>Recent Tweet Likes</h2>
+            <table id="recentLikesTable" style="width:70%;display: inline-block">
+                <tr>
+                    <th>Time</th>
+                    <th>Conference</th>
+                    <th>Tweet</th>
+                    <th>Hashtag</th>
+                </tr>
+            </table>
+        </div>
+        <br/>
+        <a href="#" onclick="toggle('runningTop3TweetLikes')">Toggle Running Top 3 Tweet Likes</a>
+        <div id="runningTop3TweetLikes" style="display:none">
+            <h2>Running Top 3 Tweet Likes</h2>
+            <table id="recentLikesTable">
+                <tr>
+                    <th>Time</th>
+                    <th>Conference</th>
+                    <th>Running Top 3</th>
+                </tr>
+                <tr>
+                    <td id="ukoug_tech17Top3LikesTime"></td>
+                    <td>UKOUG 2017 Tech</th>
+                        <td>
+                            <table id="ukoug_tech17Top3LikesTimeTable">
+                                <tr>
+                                    <th>Tweet</th>
+                                    <th>Author</th>
+                                    <th>Tweet Count</th>
+                                </tr>
+                            </table>
+                        </td>
+                </tr>
+                <tr>
+                    <td id="ukoug_apps17Top3LikesTime"></td>
+                    <td>Apps</th>
+                        <td>
+                            <table id="ukoug_apps17Top3LikesTimeTable">
+                                <tr>
+                                    <th>Tweet</th>
+                                    <th>Author</th>
+                                    <th>Tweet Count</th>
+                                </tr>
+                            </table>
+                        </td>
+                </tr>
+                <tr>
+                    <td id="ukoug_jde17Top3LikesTime"></td>
+                    <td>JDE</th>
+                        <td>
+                            <table id="ukoug_jde17Top3LikesTimeTable">
+                                <tr>
+                                    <th>Tweet</th>
+                                    <th>Author</th>
+                                    <th>Tweet Count</th>
+                                </tr>
+                            </table>
+                        </td>
+                </tr>
+                <tr>
+                    <td id="ukoug17Top3LikesTime"></td>
+                    <td>UKOUG 2017</th>
+                        <td>
+                            <table id="ukoug17Top3LikesTimeTable">
+                                <tr>
+                                    <th>Tweet</th>
+                                    <th>Author</th>
+                                    <th>Tweet Count</th>
+                                </tr>
+                            </table>
+                        </td>
+                </tr>
+            </table>
+        </div>
+        <br/>
+        <a href="#" onclick="toggle('currentTweetCount')">Toggle Running Tweet Count</a>
+        <div id="currentTweetCount" style="display:none">
+            <h2>Current Tweet Count</h2>
+            <table id="currentTweetCountTable">
+                <tr>
+                    <th>Conference</th>
+                    <th>Tweet Count</th>
+                </tr>
+                <tr>
+                    <td>JDE</td>
+                    <td><span id="ukoug_jde17TweetCount"></span></td>
+                </tr>
+                <tr>
+                    <td>Apps</td>
+                    <td><span id="ukoug_apps17TweetCount"></span></td>
+                </tr>
+                <tr>
+                    <td>Tech</td>
+                    <td><span id="ukoug_tech17TweetCount"></span></td>
+                </tr>
+                <tr>
+                    <td>UKOUG17</td>
+                    <td><span id="ukoug17TweetCount"></span></td>
+                </tr>
+            </table>
+        </div>
+        <h2>Live Tweet Stream</h2>
+        <table id="tweetsTable">
+            <tr>
+                <th><img src="images/like-tweet.jpg" width="100" /></th>
+                <th>Conference&nbsp;</th>
+                <th>Author&nbsp;</th>
+                <th>Tweet&nbsp;</th>
+                <th>Hashtag</th>
+            </tr>
+        </table>
+        <br/>
+    </div>
+    <script src="js/websocket.js"></script>
+    <script src="js/sse-handler.js"></script>
+
+</body>
+
+</html>
