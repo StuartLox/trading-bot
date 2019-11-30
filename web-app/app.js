@@ -16,7 +16,7 @@ const app = express()
   .use(bodyParser.urlencoded({ extended: true }))
   //configure sseMW.sseMiddleware as function to get a stab at incoming requests, in this case by adding a Connection property to the request
   .use(sseMW.sseMiddleware)
-  .use(express.static(__dirname + '/stock_public'))
+  .use(express.static(__dirname + '/public'))
   .get('/updates', function (req, res) {
     console.log("res (should have sseConnection)= " + res.sseConnection);
     var sseConnection = res.sseConnection;
