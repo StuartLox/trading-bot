@@ -16,12 +16,11 @@ var client = new Client(host);
 var options = {
   kafkaHost: host,
   id: 'consumer1',
-  groupId: 'trader.v1.8',
+  groupId: 'trader.v2.3',
   fetchMaxBytes: 1024 * 1024,
   encoding: 'buffer',
   fromOffset: 'earliest'
 };
-
 
 var subscribers = [];
 
@@ -36,31 +35,25 @@ consumerGroup.on('error', onError)
 
 function onMessage(rawMessage) {
   console.log('%s read msg Topic="%s" Partition=%s Offset=%d', client.clientId, rawMessage.topic, rawMessage.partition, rawMessage.offset);
-  registry.decode(rawMessage.value)
-    .then((msg) => {
+  registry.decode(rawMessage.key).then((key) => {
+    registry.decode(rawMessage.value)
+    .then((value) => {
       subscribers.forEach((subscriber) => {
-        var json_str = JSON.stringify(msg);
+        var keyValue = Object.assign(key, value)
+        var json_str = JSON.stringify(keyValue);
         subscriber(json_str);
       })
     })
+  })
+  // registry.decode(rawMessage.value)
+  //   .then((msg) => {
+  //     subscribers.forEach((subscriber) => {
+  //       var json_str = JSON.stringify(msg);
+  //       subscriber(json_str);
+  //     })
+  //   })
     .catch(err => err)
 }
-
-// setInterval(() => {
-//   var msg = { 
-//     "symbol": "BTC-AUD" ,
-//     "volume": "10000",
-//     "high": "200", "low": "200", "close": "200", "timestamp": "2019-10-10T22:11:11Z", "open": "200" };
-
-//   var tle = JSON.stringify(msg);
-//   subscribers.forEach((subscriber) => {
-//     subscriber(msg);
-//     console.log(tle);
-
-//   })
-// }
-//   , 1000
-// )
 
 function onError(error) {
   console.error(error);
