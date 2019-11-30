@@ -82,7 +82,7 @@ console.log('server running on port 3000');
 setInterval(() => {
   updateSseClients({ "eventType": "tweetEvent", "text": "Heartbeat: " + new Date() + "  #oow17 ", "isARetweet": "N", "author": "Your Node backend system", "hashtag": "HEARTBEAT", "createdAt": null, "language": "en", "tweetId": "1492545590100001b1Un", "tagFilter": "oow17", "originalTweetId": null })
 }
-  , 2500000
+  , 10000
 )
 var tweetCache = {};
 tweetListener.subscribeToTweets((message) => {

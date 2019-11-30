@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>UKOUG 2017 - Tech, Apps and JDE Tweet Master</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+        function toggle(elementId) {
+           var elementToToggle =  document.getElementById(elementId);
+           elementToToggle.style.display = elementToToggle.style.display=='none'?'':'none'; 
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <h1>Realtime Crypto</h1>
+        <br/>
+        <!-- output is container used by sse-handler -->
+        <div id="output">
+        </div>
+        <h2>Live Tweet Stream</h2>
+        <table id="stockTable">
+            <tr>
+                <th><img src="images/like-tweet.jpg" width="100" /></th>
+                <th>Symbol&nbsp;</th>
+                <th>Timestamp&nbsp;</th>
+                <th>Open&nbsp;</th>
+                <th>High&nbsp;</th>
+                <th>Low&nbsp;</th>
+                <th>Close&nbsp;</th>
+                <th>Volume&nbsp;</th>
+            </tr>
+        </table>
+        <br/>
+    </div>
+    <script src="js/sse-handler.js"></script>
+
+</body>
+
+</html>

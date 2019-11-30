@@ -1,91 +1,75 @@
-const KafkaAvro = require('kafka-node-avro');
-const Settings = {
-    "kafka": {
-        "kafkaHost": "localhost:9092"
-    },
-    "schema": {
-        "registry": "http://localhost:8081"
+const kafka = require('kafka-node');
+const schemaRegister = require('avro-schema-registry');
+const avroSchema = require('./models/avroSchema')
+let kafkaServiceInstance = null;
+
+class KafkaService {
+
+    constructor() {
+        this.client = new kafka.KafkaClient({ kafkaHost: 'localhost:9092' })
+        this.schemaRegistry = schemaRegister('http://localhost:8081');
+        this.producer = new kafka.Producer(this.client)
+        this.producer.on('ready', () => {
+            console.log('Kafka Producer is connected and ready.')
+            this.isReady = true
+        })
+        this.isReady = false
+
+        this.producer.on('error', (error) => {
+            console.error(error)
+        })
     }
-};
-var avroSchema = {
-    name: 'MyAwesomeType',
-    type: 'record',
-    fields: [
-        {
-            name: 'id',
-            type: 'string'
-        }, {
-            name: 'timestamp',
-            type: 'double'
-        }, {
-            name: 'enumField',
-            type: {
-                name: 'EnumField',
-                type: 'enum',
-                symbols: ['sym1', 'sym2', 'sym3']
-            }
-        }]
-};
 
-var keyAvroSchema = {
-    name: 'MyAwesomeType',
-    type: 'record',
-    fields: [
-        {
-            name: 'id',
-            type: 'string'
-        }]
-};
-const avroSchemaRegistry = require('avro-schema-registry');
-const schemaRegistry = 'http://localhost:8081';
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
 
-const registry = avroSchemaRegistry(schemaRegistry);
-var kafka = require('kafka-node');
-var HighLevelProducer = kafka.HighLevelProducer;
-var KeyedMessage = kafka.KeyedMessage;
+    async sendRecord(topic, record, schema, keySchema, callback) {
+        let retries = 0
 
-var client = new kafka.KafkaClient({ kafkaHost: 'localhost:9092' });
+        while (!this.isReady && retries < 3) {
+            retries += 1
+            await this.sleep(100)
+        }
 
-// For this demo we just log client errors to the console.
-client.on('error', function (error) {
-    console.error(error);
-});
+        if (!this.isReady) {
+            console.log('Kafka producer is not ready.  Try again later.')
+            return false
+        }
 
-var producer = new HighLevelProducer(client);
-
-producer.on('ready', function () {
-    // Create message and encode to Avro buffer
-
-    var record = {
-        enumField: 'sym1',
-        id: '3e0c63c4-956a-4378-8a6d-2de636d191de',
-        timestamp: Date.now()
-    };
-
-    topic = "node-kafka.v1"
-    registry.encodeMessage(topic, avroSchema, record)
-            .then((msg) => {
-                const payloads = [{
-                    topic: topic,
-                    key: record.id,
-                    messages: msg,
-                }]
-                this.producer.send(payloads, callback)
+        this.schemaRegistry.encodeKey(topic, keySchema, record.id)
+            .then((keyMsg) => {
+                this.schemaRegistry.encodeMessage(topic, schema, record)
+                    .then((msg) => {
+                        const payloads = [{
+                            topic: topic,
+                            key: keyMsg,
+                            messages: msg,
+                        }]
+                        this.producer.send(payloads, callback)
+                    })
             })
+        return true
+    }
+}
 
-    //Send payload to Kafka and log result/error
-    // producer.send(payload, function (error, result) {
-    //     console.info('Sent payload to Kafka: ', payload);
-    //     if (error) {
-    //         console.error(error);
-    //     } else {
-    //         var formattedResult = result[0];
-    //         console.log('result: ', result)
-    //     }
-    // });
+function getKafkaServiceInstance() {
+    if (!kafkaServiceInstance) {
+        kafkaServiceInstance = new KafkaService()
+    }
+    return kafkaServiceInstance;
+}
+
+
+const kafkaConn = new KafkaService()
+
+var keySchema = { "type": "string" }
+var record = { "id": "1234" };
+
+  
+kafkaConn.sendRecord('test-node.v6', record, avroSchema, keySchema, (err, data) => {
+    if (err) {
+        console.log(err);
+    }
+    console.log(data);
 });
-
-// For this demo we just log producer errors to the console.
-producer.on('error', function (error) {
-    console.error(error);
-});  

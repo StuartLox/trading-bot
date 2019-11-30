@@ -16,7 +16,6 @@ exports.sseMiddleware = sseMiddleware;
 var Connection = (function () {
     function Connection(res) {
         console.log(" sseMiddleware construct connection for response ");
-
         this.res = res;
     }
     Connection.prototype.setup = function () {
@@ -28,7 +27,7 @@ var Connection = (function () {
         });
     };
     Connection.prototype.send = function (data) {
-     //   console.log("send event to SSE stream " + JSON.stringify(data));
+       console.log("send event to SSE stream " + JSON.stringify(data));
         this.res.write("data: " + JSON.stringify(data) + "\n\n");
     };
     return Connection;
