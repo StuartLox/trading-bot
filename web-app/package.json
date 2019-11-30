@@ -12,12 +12,14 @@
     "avro-schema-registry": "^1.5.1",
     "body-parser": "^1.15.0",
     "bufferutil": "3.0.2",
+    "chart.js": "^2.9.3",
     "express": "^4.13.4",
     "kafka-node": "^2.1.0",
     "kafka-node-avro": "^4.1.1",
+    "plotly": "^1.0.6",
     "request": "^2.81.0",
     "serve-static": "^1.10.2",
     "utf-8-validate": "3.0.3",
-    "ws": "3.2.0"
+    "ws": "^3.3.1"
   }
 }
