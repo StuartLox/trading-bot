@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trader-bot-frontend-deployment
+  labels:
+    app: trader-bot-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trader-bot-frontend
+  template:
+    metadata:
+      labels:
+        app: trader-bot-frontend
+    spec:
+      containers:
+      - name: trader-bot-frontend
+        image: stuartloxton/trader-bot-frontend:latest
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3000
