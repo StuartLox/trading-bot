@@ -49,11 +49,11 @@ coverage.xml
 .pytest_cache/
 bin/ 
 *.zip
+.metals/
 
 # Translations
 *.mo
 *.pot
-
 # Django stuff:
 *.log
 local_settings.py

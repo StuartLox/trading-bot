@@ -58,14 +58,7 @@ dependencies {
 
     // Utils
     implementation("org.json:json:20190722")
-    implementation("com.tinder.scarlet:scarlet:0.1.9")
-    implementation("com.squareup.okhttp3:okhttp:4.4.0")
-    implementation("com.squareup.moshi:moshi:1.9.2")
-    implementation "com.github.tinder.scarlet:scarlet:$scarletVersion"
-    implementation "com.github.tinder.scarlet:scarlet-websocket-okhttp:$scarletVersion"
-    implementation "com.github.tinder.scarlet:scarlet-stream-adapter-rxjava2:$scarletVersion"
-    implementation "com.github.tinder.scarlet:scarlet-message-adapter-gson:$scarletVersion"
-    implementation "com.github.tinder.scarlet:scarlet-lifecycle-android:$scarletVersion"
+
     //Test Dependencies
     implementation("org.apache.kafka:kafka-streams-test-utils:$kafkaVersion")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
@@ -95,3 +88,4 @@ compileTestKotlin {
 sourceSets {
     main.java.srcDirs += 'build/generated-main-avro-java'
 }
+z
