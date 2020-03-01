@@ -1,7 +1,7 @@
 package com.stuartloxton.bitcoinprice.adapter
 
-import com.stuartloxton.kotlinwebsocket.Stock
 import com.stuartloxton.bitcoinprice.adapter.config.KafkaConfig
+import com.stuartloxton.bitcoinpriceadapter.Stock
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.kafka.core.KafkaTemplate

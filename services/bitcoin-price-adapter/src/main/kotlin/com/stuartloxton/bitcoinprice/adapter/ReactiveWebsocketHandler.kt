@@ -1,19 +1,22 @@
 package com.stuartloxton.bitcoinprice.adapter
-
-import com.stuartloxton.kotlinwebsocket.Stock
+//
+//
+//
+import com.stuartloxton.bitcoinpriceadapter.Stock
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.CommandLineRunner
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.socket.WebSocketMessage
 import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
 import java.net.URI
 
 @Component
-class ReactiveWebSocketHandler(private val stockEventProducer: StockEventProducer): CommandLineRunner {
+class ReactiveWebSocketHandler(private val stockEventProducer: StockEventProducer): ApplicationRunner {
     @Value("\${application.btc-stream-uri}")
     private val btcUri = ""
     private val logger: Logger = LoggerFactory.getLogger(ReactiveWebSocketHandler::class.java)
@@ -49,7 +52,7 @@ class ReactiveWebSocketHandler(private val stockEventProducer: StockEventProduce
         }
     }
 
-    override fun run(vararg args: String?) {
+    override fun run(args: ApplicationArguments) {
         val uri = URI(btcUri)
         val client = ReactorNettyWebSocketClient()
         client.execute(uri) {session ->

@@ -1,0 +1,21 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: bitcoin-price-adapter
+  namespace: operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitcoin-price-adapter
+  template:
+    metadata:
+      labels:
+        app: bitcoin-price-adapter
+    spec:
+      containers:
+        - name: bitcoin-price-adapter
+          image: stuartloxton/bitcoin-price-adapter:latest
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod

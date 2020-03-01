@@ -1,6 +1,6 @@
 package com.stuartloxton.bitcoinprice.adapter.config
 
-import com.stuartloxton.kotlinwebsocket.Stock
+import com.stuartloxton.bitcoinpriceadapter.Stock
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.slf4j.LoggerFactory
@@ -36,6 +36,13 @@ class KafkaConfig {
         producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,  KafkaAvroSerializer::class.java)
         producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
         producerProps.put("schema.registry.url", schemaRegistryUrl)
+        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
+        val jaasCfg = String.format(jaasTemplate, "test", "test123")
+        producerProps.put("schema.registry.url", schemaRegistryUrl)
+        producerProps.put("security.protocol", "SASL_PLAINTEXT")
+        producerProps.put("sasl.mechanism", "PLAIN")
+        producerProps.put("sasl.jaas.config", jaasCfg)
+
         return producerProps
     }
 

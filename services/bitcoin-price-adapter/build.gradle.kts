@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
 	id("org.springframework.boot") version "2.2.4.RELEASE"
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
-	id("com.commercehub.gradle.plugin.avro") version "0.9.1"
+	id("com.bmuschko.docker-spring-boot-application") version "6.1.4"
 	kotlin("jvm") version "1.3.61"
 	kotlin("plugin.spring") version "1.3.61"
 }
@@ -41,6 +41,19 @@ dependencies {
 	testImplementation("org.springframework.kafka:spring-kafka-test")
 }
 
+buildscript {
+
+	repositories {
+		jcenter()
+	}
+	dependencies {
+		classpath("com.commercehub.gradle.plugin:gradle-avro-plugin:0.17.0")
+
+	}
+}
+apply(plugin = "com.commercehub.gradle.plugin.avro")
+
+
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
@@ -51,7 +64,37 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 }
+val fileTree = configurations.testRuntimeClasspath.get().filter {
+	it.name.endsWith(".so") || it.name.endsWith(".dll") || it.name.endsWith(".dylib")
+}.asFileTree
 
-sourceSets["main"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
-	kotlin.srcDir("build/generated-main-avro-java")
+tasks.register<Copy>("copyNativeDeps") {
+
+	from(fileTree.files)
+	into("build/native-libs")
+
+	doFirst {
+		mkdir("build/native-libs")
+	}
 }
+
+tasks.withType<KotlinCompile> {
+	dependsOn("generateAvroJava")
+}
+
+tasks {
+	bootJar {
+		launchScript()
+	}
+}
+
+docker {
+	springBootApplication {
+		baseImage.set("openjdk:8-alpine")
+		ports.set(listOf(9090, 8080))
+		images.set(setOf("stuartloxton/bitcoin-price-adapter:0.5", "stuartloxton/bitcoin-price-adapter:latest"))
+		jvmArgs.set(listOf("-Dspring.profiles.active=production", "-Xmx2048m"))
+	}
+}
+
+tasks.build { dependsOn(tasks.dockerBuildImage) }

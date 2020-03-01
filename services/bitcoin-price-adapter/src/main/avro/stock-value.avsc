@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Stock",
-  "namespace": "com.stuartloxton.kotlinwebsocket",
+  "namespace": "com.stuartloxton.bitcoinpriceadapter",
   "fields": [
     {
         "name": "symbol",
