@@ -156,4 +156,4 @@ build.sh
 pyvenv.cfg
 rsa.py
 .metals
-
+node_modules/
