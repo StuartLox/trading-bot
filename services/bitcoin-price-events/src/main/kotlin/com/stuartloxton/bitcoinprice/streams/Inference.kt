@@ -1,38 +1,35 @@
-//package com.stuartloxton.bitcoinprice.streams
-//
-//import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
-//import org.nd4j.linalg.api.ndarray.INDArray
-//import org.nd4j.linalg.factory.Nd4j
-//import org.nd4j.linalg.io.ClassPathResource
-//
-//
-//class Inference {
-//    private val simpleMlp = ClassPathResource(
-//        "games.h5").getFile().getPath()
-//    private val model = KerasModelImport
-//        .importKerasSequentialModelAndWeights(simpleMlp)
-//
-//    fun buildTensor(): INDArray {
-//        val inputs = 10
-//        val rank = 1
-//        return Nd4j.zeros(rank, inputs)
-//    }
-//
-//    fun getPrediction(): Double {
-//        val features = buildTensor()
-//        for (j in 0..9) {
-//            var x = 1.0
-//            if (Math.random() < 0.5)
-//                x = 0.0
-//            features.putScalar(intArrayOf(0, j), x)
-//        }
-//        val prediction = model.output(features).getDouble(0)
-//        return prediction
-//    }
-//}
-////
-////fun main(args: Array<String>) {
-////    val inf = Inference()
-////    val prediction = inf.getPrediction()
-////    println(prediction)
-////}
+package com.stuartloxton.bitcoinprice.streams
+
+import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
+import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.factory.Nd4j
+import org.nd4j.linalg.io.ClassPathResource
+import org.springframework.stereotype.Component
+
+@Component
+class Inference {
+    private val mPath = "model.h5"
+    private val lstm = ClassPathResource(mPath).getFile().getPath()
+    private val model = KerasModelImport.importKerasSequentialModelAndWeights(lstm, false)
+
+    private fun buildTensor(): INDArray {
+        val timeSteps = 50
+        val rows = 1
+        val columns = 2
+        return  Nd4j.zeros(rows, columns, timeSteps)
+    }
+
+    fun getPrediction(data: List<List<Double>>): Double {
+        val features = buildTensor()
+         if (data.size == 50) {
+             data.forEachIndexed { index, it ->
+                features.putScalar(intArrayOf(0, 0, index), it.get(0))
+                features.putScalar(intArrayOf(0, 1, index), it.get(1))
+            }
+             return model.output(features).getDouble(0)
+        }
+        else {
+             return -1.0
+         }
+    }
+}

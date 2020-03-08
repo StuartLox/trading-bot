@@ -1,9 +1,9 @@
 //package com.stuartloxton.bitcoinprice.handler
 //
 //
-//import com.stuartloxton.bitcoinprice.Stock
 //import com.stuartloxton.bitcoinprice.models.StockResponse
 //import com.stuartloxton.bitcoinprice.streams.StockEventProducer
+//import com.stuartloxton.bitcoinpriceadapter.Stock
 //import org.json.JSONObject
 //import org.slf4j.Logger
 //import org.slf4j.LoggerFactory

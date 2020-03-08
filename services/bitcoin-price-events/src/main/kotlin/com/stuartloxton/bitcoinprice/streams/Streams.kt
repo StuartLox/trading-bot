@@ -2,7 +2,7 @@ package com.stuartloxton.bitcoinprice.streams
 
 import com.stuartloxton.bitcoinprice.AveragePrice
 import com.stuartloxton.bitcoinprice.AveragePriceWindow
-import com.stuartloxton.bitcoinprice.Stock
+import com.stuartloxton.bitcoinpriceadapter.Stock
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
@@ -76,14 +76,19 @@ class Streams {
             stringSerde, stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
             .groupByKey()
-            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.day)))
+            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.minute * 5)))
             .aggregate(
                 { emptyAveragePrice() },
                 { _, stc, aggregate -> averagePriceAggregator(stc, aggregate)},
                 Materialized.with(stringSerde,avgPriceSpecificAvroSerde)
             )
+//            .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
             .toStream()
             .selectKey{ key, _ -> averagePriceWindowBuilder(key.key(), key.window().end())}
+            .peek{ key, value ->
+                println(key)
+                println(value)
+            }
 
         movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
         return movingAvgPrice

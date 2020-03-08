@@ -10,3 +10,4 @@ application:
     bootstrap: ${KAFKA_BOOTSTRAP_SERVERS}
     schema-registry: ${SCHEMA_REGISTRY_URL}
     group-id: ${STREAMS_BTC_GROUPID}
+    avg-btc-group-id: ${CONSUMER_BTC_GROUPID}

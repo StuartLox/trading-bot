@@ -2,7 +2,7 @@ package com.stuartloxton.bitcoinprice.config
 
 import com.stuartloxton.bitcoinprice.AveragePrice
 import com.stuartloxton.bitcoinprice.AveragePriceWindow
-import com.stuartloxton.bitcoinprice.Stock
+import com.stuartloxton.bitcoinpriceadapter.Stock
 import com.stuartloxton.bitcoinprice.streams.StockTimestampExtractor
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
@@ -50,25 +50,31 @@ class KafkaConfig {
     @Value("\${application.kafka.group-id}")
     var groupId: String = ""
 
-    @Bean
-    fun producerConfig(): HashMap<String, Any> {
-        val producerProps = HashMap<String, Any>()
-        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
-        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,  KafkaAvroSerializer::class.java)
-        producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
-        producerProps.put("schema.registry.url", schemaRegistryUrl)
-        return producerProps
-    }
-
-    @Bean
-    fun producerFactory(): ProducerFactory<String, Stock> {
-        return DefaultKafkaProducerFactory(producerConfig())
-    }
-
-    @Bean
-    fun kafkaTemplate(): KafkaTemplate<String, Stock> {
-        return KafkaTemplate(producerFactory())
-    }
+    @Value("\${application.kafka.avg-btc-group-id}")
+    var streamGroupId: String = ""
+//
+//    @Bean
+//    fun producerConfig(): HashMap<String, Any> {
+//        val producerProps = HashMap<String, Any>()
+//        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+//        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,  KafkaAvroSerializer::class.java)
+//        producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
+//        producerProps.put("schema.registry.url", schemaRegistryUrl)
+//        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
+//        val jaasCfg = String.format(jaasTemplate, "test", "test123")
+//        producerProps.put("sasl.jaas.config", jaasCfg)
+//        return producerProps
+//    }
+//
+//    @Bean
+//    fun producerFactory(): ProducerFactory<String, Stock> {
+//        return DefaultKafkaProducerFactory(producerConfig())
+//    }
+//
+//    @Bean
+//    fun kafkaTemplate(): KafkaTemplate<String, Stock> {
+//        return KafkaTemplate(producerFactory())
+//    }
 
     fun getStreamsConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
@@ -77,6 +83,11 @@ class KafkaConfig {
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
         config.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, StockTimestampExtractor::class.java)
         config.put("schema.registry.url", schemaRegistryUrl)
+        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
+        val jaasCfg = String.format(jaasTemplate, "test", "test123")
+        config.put("sasl.jaas.config", jaasCfg)
+        config.put("security.protocol", "SASL_PLAINTEXT")
+        config.put("sasl.mechanism", "PLAIN")
         return config
     }
 
@@ -90,25 +101,19 @@ class KafkaConfig {
     fun consumerConfig(): HashMap<String, Any> {
         val consumerFactoryProperties = HashMap<String, Any>()
         consumerFactoryProperties[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrapUrl
-        consumerFactoryProperties[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = false
+        consumerFactoryProperties[ConsumerConfig.GROUP_ID_CONFIG] = streamGroupId
         consumerFactoryProperties[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = false
         consumerFactoryProperties[KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG] =
             true
         consumerFactoryProperties[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
         consumerFactoryProperties["schema.registry.url"] = schemaRegistryUrl
+        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
+        val jaasCfg = String.format(jaasTemplate, "test", "test123")
+        consumerFactoryProperties["sasl.jaas.config"] = jaasCfg
+        consumerFactoryProperties["security.protocol"] = "SASL_PLAINTEXT"
+        consumerFactoryProperties["sasl.mechanism"] = "PLAIN"
         return consumerFactoryProperties
     }
-
-//    @Bean
-//    fun avgPriceEventListenerContainerFactory():
-//            ConcurrentKafkaListenerContainerFactory<AveragePriceWindow, AveragePrice> {
-//        val factory =
-//            ConcurrentKafkaListenerContainerFactory<AveragePriceWindow, AveragePrice>()
-//        factory.consumerFactory = avgPriceConsumer()
-//        factory.containerProperties.ackMode =
-//            ContainerProperties.AckMode.MANUAL_IMMEDIATE
-//        return factory
-//    }
 
     @Bean
     fun avgPriceConsumer(): ConsumerFactory<AveragePriceWindow, AveragePrice> {

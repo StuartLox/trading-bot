@@ -40,9 +40,9 @@ dependencies {
     implementation("org.json:json:20190722")
 
     //Deeplearning4j Dependencies
-    implementation("org.deeplearning4j:deeplearning4j-core:1.0.0-beta4")
-    implementation("org.deeplearning4j:deeplearning4j-modelimport:1.0.0-beta4")
-    implementation("org.nd4j:nd4j-native-platform:1.0.0-beta4")
+    implementation("org.deeplearning4j:deeplearning4j-core:1.0.0-beta6")
+    implementation("org.deeplearning4j:deeplearning4j-modelimport:1.0.0-beta6")
+    implementation("org.nd4j:nd4j-native-platform:1.0.0-beta6")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -99,9 +99,9 @@ tasks {
 
 docker {
     springBootApplication {
-        baseImage.set("openjdk:8-alpine")
+        baseImage.set("anapsix/alpine-java")
         ports.set(listOf(9090, 8080))
-        images.set(setOf("stuartloxton/bitcoin-price-events:0.1", "stuartloxton/bitcoin-price-events:latest"))
+        images.set(setOf("stuartloxton/bitcoin-price-events:0.2.0", "stuartloxton/bitcoin-price-events:latest"))
         jvmArgs.set(listOf("-Dspring.profiles.active=production", "-Xmx2048m"))
     }
 }

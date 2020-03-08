@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "Stock",
-  "namespace": "com.stuartloxton.bitcoinprice",
+  "namespace": "com.stuartloxton.bitcoinpriceadapter",
   "fields": [
     {
         "name": "symbol",
