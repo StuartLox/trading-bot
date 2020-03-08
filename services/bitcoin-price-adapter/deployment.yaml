@@ -19,3 +19,9 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+            - name:  BTC_EVENT_TOPIC
+              value: "adapter.test-bitcoin.v1"
+            - name:  KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: SCHEMA_REGISTRY_URL
+              value: "http://schemaregistry:8081"

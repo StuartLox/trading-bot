@@ -5,8 +5,8 @@ spring:
 application:
   btc-stream-uri: "wss://stream.binance.com/stream?streams=!miniTicker@arr@3000ms/btcusdt@depth.b10/btcusdt@aggTrade.b10"
   kafka:
-    bootstrap: "kafka:9092"
-    schema-registry: "http://schemaregistry:8081"
-    btc-event-topic: "adapter.test-bitcoin.v1"
+    bootstrap: ${KAFKA_BOOTSTRAP_SERVERS}
+    schema-registry: ${SCHEMA_REGISTRY_URL}
+    btc-event-topic: ${BTC_EVENT_TOPIC}
     avg-price-topic: "avg-bitcoin-price.v1"
     group-id: "group-id"
