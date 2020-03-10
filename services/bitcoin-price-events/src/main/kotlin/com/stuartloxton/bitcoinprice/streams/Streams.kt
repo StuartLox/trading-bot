@@ -82,13 +82,9 @@ class Streams {
                 { _, stc, aggregate -> averagePriceAggregator(stc, aggregate)},
                 Materialized.with(stringSerde,avgPriceSpecificAvroSerde)
             )
-//            .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
+            .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
             .toStream()
             .selectKey{ key, _ -> averagePriceWindowBuilder(key.key(), key.window().end())}
-            .peek{ key, value ->
-                println(key)
-                println(value)
-            }
 
         movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
         return movingAvgPrice

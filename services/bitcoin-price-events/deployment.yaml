@@ -22,7 +22,7 @@ spec:
             - name: BTC_EVENT_TOPIC
               value: "adapter.test-bitcoin.v1"
             - name: AVG_PRICE_TOPIC
-              value: "avg-bitcoin-price.v1"
+              value: "aggregated.avg-bitcoin-price.v1"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
             - name: SCHEMA_REGISTRY_URL

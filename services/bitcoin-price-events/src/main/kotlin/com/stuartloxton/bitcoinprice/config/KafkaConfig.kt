@@ -52,42 +52,37 @@ class KafkaConfig {
 
     @Value("\${application.kafka.avg-btc-group-id}")
     var streamGroupId: String = ""
-//
-//    @Bean
-//    fun producerConfig(): HashMap<String, Any> {
-//        val producerProps = HashMap<String, Any>()
-//        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
-//        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,  KafkaAvroSerializer::class.java)
-//        producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
-//        producerProps.put("schema.registry.url", schemaRegistryUrl)
-//        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
-//        val jaasCfg = String.format(jaasTemplate, "test", "test123")
-//        producerProps.put("sasl.jaas.config", jaasCfg)
-//        return producerProps
-//    }
-//
-//    @Bean
-//    fun producerFactory(): ProducerFactory<String, Stock> {
-//        return DefaultKafkaProducerFactory(producerConfig())
-//    }
-//
-//    @Bean
-//    fun kafkaTemplate(): KafkaTemplate<String, Stock> {
-//        return KafkaTemplate(producerFactory())
-//    }
+
+    @Value("\${application.kafka.hasSecret}")
+    var hasSecret: Boolean = false
+
+    @Value("\${application.kafka.username}")
+    var username: String = ""
+
+    @Value("\${application.kafka.password}")
+    var password: String = ""
+
+    fun commonConfig(): HashMap<String, Any> {
+        val config = HashMap<String, Any>()
+        config.put("bootstrap.servers", bootstrapUrl)
+        config.put("schema.registry.url", schemaRegistryUrl)
+        if (hasSecret) {
+            val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
+            val jaasCfg = String.format(jaasTemplate, username, password)
+            config.put("sasl.jaas.config", jaasCfg)
+            config.put("security.protocol", "SASL_PLAINTEXT")
+            config.put("sasl.mechanism", "PLAIN")
+        }
+        return config
+    }
+
 
     fun getStreamsConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
+        config.putAll(commonConfig())
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, groupId)
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
         config.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, StockTimestampExtractor::class.java)
-        config.put("schema.registry.url", schemaRegistryUrl)
-        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
-        val jaasCfg = String.format(jaasTemplate, "test", "test123")
-        config.put("sasl.jaas.config", jaasCfg)
-        config.put("security.protocol", "SASL_PLAINTEXT")
-        config.put("sasl.mechanism", "PLAIN")
         return config
     }
 
@@ -99,20 +94,13 @@ class KafkaConfig {
     }
 
     fun consumerConfig(): HashMap<String, Any> {
-        val consumerFactoryProperties = HashMap<String, Any>()
-        consumerFactoryProperties[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrapUrl
-        consumerFactoryProperties[ConsumerConfig.GROUP_ID_CONFIG] = streamGroupId
-        consumerFactoryProperties[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = false
-        consumerFactoryProperties[KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG] =
-            true
-        consumerFactoryProperties[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-        consumerFactoryProperties["schema.registry.url"] = schemaRegistryUrl
-        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
-        val jaasCfg = String.format(jaasTemplate, "test", "test123")
-        consumerFactoryProperties["sasl.jaas.config"] = jaasCfg
-        consumerFactoryProperties["security.protocol"] = "SASL_PLAINTEXT"
-        consumerFactoryProperties["sasl.mechanism"] = "PLAIN"
-        return consumerFactoryProperties
+        val config = HashMap<String, Any>()
+        config.putAll(commonConfig())
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, streamGroupId)
+        config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
+        config.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+        return config
     }
 
     @Bean
