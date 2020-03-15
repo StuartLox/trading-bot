@@ -9,13 +9,13 @@
   "author": "Stuart Loxton",
   "license": "ISC",
   "dependencies": {
-    "avro-schema-registry": "^1.5.1",
+    "avro-schema-registry": "^2.0.1",
     "body-parser": "^1.15.0",
     "dotenv": "^8.2.0",
     "express": "^4.13.4",
-    "kafka-node": "^2.1.0",
-    "kafka-node-avro": "^4.1.1",
-    "request": "^2.81.0",
+    "kafka-node": "^5.0.0",
+    "kafka-node-avro": "^4.1.3",
+    "request": "^2.88.2",
     "serve-static": "^1.10.2"
   }
 }
