@@ -25,6 +25,7 @@ class Inference {
         val features = buildTensor()
         if (data.size == 50) {
             data.forEachIndexed { index, it ->
+                logger.info("AVG Price - ${it.get(0)}")
                 features.putScalar(intArrayOf(0, 0, index), it.get(0))
                 features.putScalar(intArrayOf(0, 1, index), it.get(1))
             }

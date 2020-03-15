@@ -157,3 +157,4 @@ pyvenv.cfg
 rsa.py
 .metals
 node_modules/
+.env

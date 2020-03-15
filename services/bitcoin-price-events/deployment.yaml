@@ -20,7 +20,7 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
             - name: BTC_EVENT_TOPIC
-              value: "adapter.test-bitcoin.v1"
+              value: "adapter.bitcoin-price.raw.v1"
             - name: AVG_PRICE_TOPIC
               value: "aggregated.avg-bitcoin-price.v1"
             - name: KAFKA_BOOTSTRAP_SERVERS
@@ -28,6 +28,8 @@ spec:
             - name: SCHEMA_REGISTRY_URL
               value: "http://schemaregistry:8081"
             - name: STREAMS_BTC_GROUPID
-              value: "consumer-stock-bitcoin-price.v1.1.3"
+              value: "consumer-stock-bitcoin-price.v1"
             - name: CONSUMER_BTC_GROUPID
-              value: "consumer-avg-bitcoin-price.v1.1"
+              value: "consumer-avg-bitcoin-price.v1.2"
+            - name: HAS_SECRET
+              value: "true"

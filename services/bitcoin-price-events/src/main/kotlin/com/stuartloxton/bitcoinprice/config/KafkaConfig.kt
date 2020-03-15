@@ -36,10 +36,10 @@ class KafkaConfig {
     private val log = LoggerFactory.getLogger(KafkaConfig::class.java)
 
     @Value("\${application.kafka.btc-event-topic}")
-    var btc_event_topic = ""
+    var btcEventTopic = ""
 
     @Value("\${application.kafka.avg-price-topic}")
-    var avg_price_topic = ""
+    var avgPriceTopic = ""
 
     @Value("\${application.kafka.bootstrap}")
     var bootstrapUrl: String = ""
@@ -81,7 +81,7 @@ class KafkaConfig {
         val config = HashMap<String, Any>()
         config.putAll(commonConfig())
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, groupId)
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
         config.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, StockTimestampExtractor::class.java)
         return config
     }
@@ -128,7 +128,7 @@ class KafkaConfig {
             ConcurrentKafkaListenerContainerFactory<AveragePriceWindow, AveragePrice>()
         factory.consumerFactory = avgPriceConsumer()
         factory.containerProperties.ackMode =
-            ContainerProperties.AckMode.MANUAL_IMMEDIATE
+            ContainerProperties.AckMode.MANUAL
         factory.isBatchListener = true
         return factory
     }

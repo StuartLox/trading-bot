@@ -48,7 +48,7 @@ class Consumer {
     }
 
     fun processEvent(key: AveragePriceWindow, value: AveragePrice): Boolean {
-        avePriceItems.add(listOf(value.getAveragePrice(), value.getAveragePrice()))
+        avePriceItems.add(listOf(value.getAveragePrice(), value.getVolume()))
         val prediction = inference.getPrediction(avePriceItems)
         val datetime = DateTime(key.getWindowEnd()).toLocalDateTime()
         logger.info("Inference: $prediction, Items: ${avePriceItems.size}, windowEnd: $datetime")

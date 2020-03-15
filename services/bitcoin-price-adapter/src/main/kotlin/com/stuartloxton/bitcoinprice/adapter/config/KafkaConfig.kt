@@ -39,7 +39,6 @@ class KafkaConfig {
         val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
         val jaasCfg = String.format(jaasTemplate, "test", "test123")
         producerProps.put("sasl.jaas.config", jaasCfg)
-        producerProps.put("schema.registry.url", schemaRegistryUrl)
         producerProps.put("security.protocol", "SASL_PLAINTEXT")
         producerProps.put("sasl.mechanism", "PLAIN")
 

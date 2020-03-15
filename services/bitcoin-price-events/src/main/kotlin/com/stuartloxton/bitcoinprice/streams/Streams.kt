@@ -45,6 +45,7 @@ class Streams {
             .setAveragePrice(0.0)
             .setSumWindow(0.0)
             .setCountWindow(0)
+            .setVolume(0.0)
             .build()
 
         fun averagePriceAggregator(newStock: Stock, currentAveragePrice: AveragePrice): AveragePrice {
@@ -59,6 +60,7 @@ class Streams {
                 .setSumWindow(sumWindow)
                 .setCountWindow(countWindow)
                 .setAveragePrice(calcAvgPrice)
+                .setVolume(newStock.getVolume())
 
             // Build new AveragePrice object
             return newAveragePrice.build()
@@ -72,11 +74,11 @@ class Streams {
             return avgPriceWindow
         }
 
-        val movingAvgPrice: KStream<AveragePriceWindow, AveragePrice> = builder.stream(kafkaConfig.btc_event_topic, Consumed.with(
+        val movingAvgPrice: KStream<AveragePriceWindow, AveragePrice> = builder.stream(kafkaConfig.btcEventTopic, Consumed.with(
             stringSerde, stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
             .groupByKey()
-            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.minute * 5)))
+            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.minute * 5)).grace(Duration.ZERO))
             .aggregate(
                 { emptyAveragePrice() },
                 { _, stc, aggregate -> averagePriceAggregator(stc, aggregate)},
@@ -86,7 +88,7 @@ class Streams {
             .toStream()
             .selectKey{ key, _ -> averagePriceWindowBuilder(key.key(), key.window().end())}
 
-        movingAvgPrice.to(kafkaConfig.avg_price_topic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
+        movingAvgPrice.to(kafkaConfig.avgPriceTopic, Produced.with(avgPriceWindowSpecificAvroSerde, avgPriceSpecificAvroSerde))
         return movingAvgPrice
     }
 }

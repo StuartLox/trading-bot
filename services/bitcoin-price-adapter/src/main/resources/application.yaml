@@ -3,10 +3,8 @@ spring:
     allow-bean-definition-overriding: true
 
 application:
-  btc-stream-uri: "wss://stream.binance.com/stream?streams=!miniTicker@arr@3000ms/btcusdt@depth.b10/btcusdt@aggTrade.b10"
+  btc-stream-uri: ${BTC_STREAM_URI}
   kafka:
     bootstrap: ${KAFKA_BOOTSTRAP_SERVERS}
     schema-registry: ${SCHEMA_REGISTRY_URL}
     btc-event-topic: ${BTC_EVENT_TOPIC}
-    avg-price-topic: "avg-bitcoin-price.v1"
-    group-id: "group-id"

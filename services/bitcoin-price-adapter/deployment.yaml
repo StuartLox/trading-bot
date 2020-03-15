@@ -20,8 +20,10 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
             - name:  BTC_EVENT_TOPIC
-              value: "adapter.test-bitcoin.v1"
+              value: "adapter.bitcoin-price.raw.v1"
             - name:  KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
             - name: SCHEMA_REGISTRY_URL
               value: "http://schemaregistry:8081"
+            - name: BTC_STREAM_URI
+              value: "wss://stream.binance.com/stream?streams=!miniTicker@arr@3000ms/btcusdt@depth.b10/btcusdt@aggTrade.b10"
