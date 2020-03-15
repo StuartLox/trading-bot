@@ -4,6 +4,7 @@ metadata:
   name: trader-bot-frontend-deployment
   labels:
     app: trader-bot-frontend
+  namespace: operator
 spec:
   replicas: 1
   selector:

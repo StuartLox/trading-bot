@@ -2,9 +2,9 @@ const kafka = require('kafka-node');
 const avroSchemaRegistry = require('avro-schema-registry');
 var subscribers = [];
 
-// stockListener.subscribeTostocks = function (callback) {
-//   subscribers.push(callback);
-// }
+stockListener.subscribeTostocks = function (callback) {
+  subscribers.push(callback);
+}
 
 const kafkaTopic = 'bitcoin-price-aud.v1';//'kafka.test';
 const host = 'localhost:9092';
@@ -22,10 +22,11 @@ var topics = [{
 var options = {
   kafkaHost: host,
   id: 'consumer1',
-  groupId: 'ExampleTestGroup.v3',
+  groupId: 'ExampleTestGroup.v4',
   fetchMaxBytes: 1024 * 1024,
   encoding: 'buffer',
-  fromOffset: 'earliest'
+  fromOffset: 'earliest',
+  sasl: { mechanism: 'plain', username: 'test', password: 'test123' }
 };
 
 var consumerGroup = new kafka.ConsumerGroup(options, kafkaTopic);
