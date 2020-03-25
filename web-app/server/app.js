@@ -15,7 +15,7 @@ const app = express()
   .use(bodyParser.urlencoded({ extended: true }))
   //configure sseMW.sseMiddleware as function to get a stab at incoming requests, in this case by adding a Connection property to the request
   .use(sseMW.sseMiddleware)
-  .use(express.static(__dirname + '/public'))
+  // .use(express.static(__dirname + '/public'))
   .get('/updates', function (req, res) {
     console.log("res (should have sseConnection)= " + res.sseConnection);
     var sseConnection = res.sseConnection;
@@ -50,5 +50,7 @@ stockListener.subscribeTostocks((message) => {
   var stockEvent = JSON.parse(message);
   console.log(stockEvent)
   stockCache[stockEvent.symbol] = stockEvent;
-  updateSseClients(stockEvent);
+  var newData = JSON.stringify({symbol: "BTC", timestamp: stockEvent.windowEnd, averagePrice: stockEvent.averagePrice})
+  var eventString = `event: priceStateUpdate\ndata: ${newData}\n\n`;
+  updateSseClients(eventString);
 })

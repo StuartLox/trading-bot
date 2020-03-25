@@ -23,12 +23,13 @@ var Connection = (function () {
         this.res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive'
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*'
         });
     };
     Connection.prototype.send = function (data) {
-       console.log("send event to SSE stream " + JSON.stringify(data));
-        this.res.write("data: " + JSON.stringify(data) + "\n\n");
+        console.log("send event to SSE stream " + data);
+        this.res.write(data);
     };
     return Connection;
 } ());
@@ -39,7 +40,7 @@ exports.Connection = Connection;
  */
 var Topic = (function () {
     function Topic() {
-        console.log(" constructor for Topic");
+        console.log("constructor for Topic");
 
         this.connections = [];
     }
