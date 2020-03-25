@@ -21,7 +21,7 @@ class App extends Component {
       accessor: 'averagePrice'
     }];
 
-    this.eventSource = new EventSource('http://localhost:8123/updates');
+    this.eventSource = new EventSource('http://localhost:5000/events');
   }
 
   componentDidMount() {
