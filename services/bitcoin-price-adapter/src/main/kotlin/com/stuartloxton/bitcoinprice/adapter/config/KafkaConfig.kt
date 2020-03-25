@@ -29,20 +29,35 @@ class KafkaConfig {
     @Value("\${application.kafka.schema-registry}")
     var schemaRegistryUrl: String = ""
 
+    @Value("\${application.kafka.hasSecret}")
+    var hasSecret: Boolean = false
+
+    @Value("\${application.kafka.username}")
+    var username: String = ""
+
+    @Value("\${application.kafka.password}")
+    var password: String = ""
+
+    fun commonConfig(): HashMap<String, Any> {
+        val config = HashMap<String, Any>()
+        config.put("bootstrap.servers", bootstrapUrl)
+        config.put("schema.registry.url", schemaRegistryUrl)
+        if (hasSecret) {
+            val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
+            val jaasCfg = String.format(jaasTemplate, username, password)
+            config.put("sasl.jaas.config", jaasCfg)
+            config.put("security.protocol", "SASL_PLAINTEXT")
+            config.put("sasl.mechanism", "PLAIN")
+        }
+        return config
+    }
     @Bean
     fun producerConfig(): HashMap<String, Any> {
-        val producerProps = HashMap<String, Any>()
-        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
-        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,  KafkaAvroSerializer::class.java)
-        producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapUrl)
-        producerProps.put("schema.registry.url", schemaRegistryUrl)
-        val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
-        val jaasCfg = String.format(jaasTemplate, "test", "test123")
-        producerProps.put("sasl.jaas.config", jaasCfg)
-        producerProps.put("security.protocol", "SASL_PLAINTEXT")
-        producerProps.put("sasl.mechanism", "PLAIN")
-
-        return producerProps
+        val props = HashMap<String, Any>()
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,  KafkaAvroSerializer::class.java)
+        props.putAll(commonConfig())
+        return props
     }
 
     @Bean

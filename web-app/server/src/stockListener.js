@@ -1,24 +1,22 @@
 const kafka = require('kafka-node');
 require('dotenv').config();
 
-const avroSchemaRegistry = require('avro-schema-registry');
+const schemaRegistryUrl = process.env.SCHEMA_REGISTRY_URL;
+const registry = require('avro-schema-registry')(schemaRegistryUrl);
 var stockListener = module.exports;
 
 
 const kafkaTopic = process.env.KAFKA_TOPIC;
 const groupId = process.env.CONSUMER_GROUPID;
 const host =  process.env.KAFKA_BOOTSTRAP_URL;
-const schemaRegistry = process.env.SCHEMA_REGISTRY_URL;
-
-const registry = avroSchemaRegistry(schemaRegistry);
 
 var options = {
   kafkaHost: host,
   id: groupId,
   groupId: groupId,
-  fetchMaxBytes: 1024 * 1024,
-  encoding: 'buffer',
   fromOffset: 'earliest',
+  encoding: 'buffer',
+  keyEncoding: 'buffer'
   // sasl: { mechanism: "plain", username: "test", password: "test123" }
 };
 
@@ -54,6 +52,6 @@ function onError(error) {
 
 process.once('SIGINT', function () {
   async.each([consumerGroup], function (consumer, callback) {
-    consumer.close(true, callback);
+      consumer.close(true, callback);
   });
 });

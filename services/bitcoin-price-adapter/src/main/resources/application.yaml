@@ -8,3 +8,6 @@ application:
     bootstrap: ${KAFKA_BOOTSTRAP_SERVERS}
     schema-registry: ${SCHEMA_REGISTRY_URL}
     btc-event-topic: ${BTC_EVENT_TOPIC}
+    hasSecret: false
+    username: "test"
+    password: "test123"

@@ -78,7 +78,7 @@ class Streams {
             stringSerde, stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
             .groupByKey()
-            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.minute * 5)).grace(Duration.ZERO))
+            .windowedBy(TimeWindows.of(Duration.ofMillis(Dimension4.minute)).grace(Duration.ZERO))
             .aggregate(
                 { emptyAveragePrice() },
                 { _, stc, aggregate -> averagePriceAggregator(stc, aggregate)},
