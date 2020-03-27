@@ -10,6 +10,7 @@ class Chart extends Component {
       data: getInitialPriceData()
     };
     this.eventSource = new EventSource('http://localhost:5000/events');
+    this.chart = React.createRef();
   }
 
   componentDidMount() {
