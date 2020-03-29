@@ -9,10 +9,10 @@
 .App {
     background-color: #282c34;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* align-items: center; */
+    /* justify-content: center; */
     font-size: calc(10px + 2vmin);
     color: white;
 }
@@ -20,3 +20,23 @@
 .App-link {
     color: #09d3ac;
 }
+
+.chart-wrapper {
+    padding: 2%;
+    width: 96%;
+    display: inline-block;
+  }
+  
+  .main.chart-wrapper {
+    height: 400px;
+  }
+  
+  .sub.chart-wrapper {
+    height: 600px;
+  }
+  
+  @media (min-width: 700px) {
+    .sub.chart-wrapper {
+      width: 29%;
+    }
+  }
