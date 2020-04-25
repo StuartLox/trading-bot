@@ -1,53 +1,63 @@
-import React, { Component } from 'react';
-import ReactTable from 'react-table';
+import React from 'react';
+import LineChart from "./components/LineChart";
+import DoughnutChart from "./components/DoughnutChart";
 import { getInitialPriceData } from './DataProvider';
-import 'react-table/react-table.css';
+import './App.css';
 
-class App extends Component {
+
+class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       data: getInitialPriceData()
     };
-
-    this.columns = [{
-      Header: 'Symbol',
-      accessor: 'symbol'
-    }, {
-      Header: 'Timestamp',
-      accessor: 'timestamp'
-    }, {
-      Header: 'AveragePrice',
-      accessor: 'averagePrice'
-    }];
-
     this.eventSource = new EventSource('http://localhost:5000/events');
   }
 
   componentDidMount() {
-    this.eventSource.addEventListener('priceStateUpdate', (e) => 
-    this.updatePriceState(JSON.parse(e.data)));
+    this.eventSource.addEventListener('priceStateUpdate', (e) =>
+      this.updatePriceState(JSON.parse(e.data)));
   }
 
   updatePriceState(priceState) {
-    console.log("Checkpoint1")
-    console.log(priceState)
-    this.setState(Object.assign({ data: this.state.data.concat(priceState) }));
-    console.log(this.state)
-  }
+    const date = new Date(priceState.timestamp).toLocaleTimeString()
+    const averagePrice = parseFloat(priceState.averagePrice).toFixed(2)
+    const record = { timestamp: date, value: averagePrice }
 
-  stopUpdates() {
-    this.eventSource.close();
+    this.state.data.push(record)
+    this.setState(Object.assign({ data: this.state.data }));
   }
 
   render() {
     return (
       <div className="App">
-        <button onClick={() => this.stopUpdates()}>Stop updates</button>
-        <ReactTable
-          data={this.state.data}
-          columns={this.columns}
-        />
+        <div className="main chart-wrapper">
+          <LineChart
+            title="Bitcoin Price"
+            data={this.state}
+            color="#70CAD1"
+          />
+        </div>
+        <div className="sub chart-wrapper">
+          <DoughnutChart
+            title="Stock Returns"
+            colors={['#a8e0ff', '#8ee3f5', '#70cad1', '#3e517a', '#b08ea2', '#BBB6DF']}
+          />
+        </div>
+        <div className="sub chart-wrapper">
+          <LineChart
+            title="Portfolio Returns"
+            data={this.state}
+            color="#70CAD1"
+          />
+        </div>
+        <div className="sub chart-wrapper">
+          <LineChart
+            title="Average Bitcoin Price"
+            data={this.state}
+            color="#70CAD1"
+          />
+        </div>
       </div>
     );
   }
