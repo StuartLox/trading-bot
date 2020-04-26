@@ -1,6 +1,5 @@
 package com.stuartloxton.bitcoinprice.streams.metrics
 
-import com.stuartloxton.bitcoinprice.AveragePriceEvent
 import com.stuartloxton.bitcoinprice.MACDEvent
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import org.springframework.stereotype.Component

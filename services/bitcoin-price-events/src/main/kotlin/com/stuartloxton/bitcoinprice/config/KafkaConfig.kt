@@ -39,7 +39,7 @@ class KafkaConfig {
     var btcEventTopic = ""
 
     @Value("\${application.kafka.btc-metrics-topic}")
-    var btcMetricTopic = ""
+    var btcMetricsTopic = ""
 
     @Value("\${application.kafka.bootstrap}")
     var bootstrapUrl: String = ""
@@ -83,7 +83,7 @@ class KafkaConfig {
     private fun getStreamsConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
         config.putAll(commonConfig())
-        config.put(StreamsConfig.APPLICATION_ID_CONFIG, groupId)
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, streamsBtcMetricsGroupId)
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
         config.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, StockTimestampExtractor::class.java)
         return config
@@ -99,7 +99,7 @@ class KafkaConfig {
     private fun consumerConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
         config.putAll(commonConfig())
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, streamsBtcMetricsGroupId)
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId)
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
         config.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")

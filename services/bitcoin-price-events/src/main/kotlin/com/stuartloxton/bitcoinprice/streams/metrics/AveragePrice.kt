@@ -13,7 +13,7 @@ class AveragePrice: Metric<AveragePriceEvent>  {
             .setCountWindow(0)
             .setVolume(0.0)
             .build()
-    
+
     override fun aggregator(newStock: Stock, current: Any): AveragePriceEvent {
         val avgPriceMetric = getMetric(current)
         val averagePriceBuilder: AveragePriceEvent.Builder = AveragePriceEvent.newBuilder(avgPriceMetric)
