@@ -25,6 +25,7 @@ class BitcoinMetric: Metric<BitcoinMetricEvent> {
     override fun aggregator(newStock: Stock, current: Any): BitcoinMetricEvent {
         val currentMetricEvent = getMetric(current)
         val bitcoinMetricEventBuilder: BitcoinMetricEvent.Builder = BitcoinMetricEvent.newBuilder(currentMetricEvent)
+
         // Construct Metrics
         val avgPrice = averagePrice.aggregator(newStock, currentMetricEvent.getAvgPrice())
         val macdEvent = macd.aggregator(newStock,  currentMetricEvent.getMacd())

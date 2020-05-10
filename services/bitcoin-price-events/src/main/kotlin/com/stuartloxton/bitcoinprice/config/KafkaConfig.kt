@@ -80,7 +80,7 @@ class KafkaConfig {
         return config
     }
 
-    private fun getStreamsConfig(): HashMap<String, Any> {
+    fun getStreamsConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
         config.putAll(commonConfig())
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, streamsBtcMetricsGroupId)

@@ -3,9 +3,7 @@ package com.stuartloxton.bitcoinprice.streams
 import com.stuartloxton.bitcoinprice.*
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
-import com.stuartloxton.bitcoinprice.streams.metrics.AveragePrice
 import com.stuartloxton.bitcoinprice.streams.metrics.BitcoinMetric
-import com.stuartloxton.bitcoinprice.streams.metrics.MACD
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
