@@ -6,16 +6,18 @@ import org.springframework.stereotype.Component
 
 @Component
 class AveragePrice: Metric<AveragePriceEvent>  {
-    override fun empty(): AveragePriceEvent = 
+
+    override fun identity(): AveragePriceEvent =
         AveragePriceEvent.newBuilder()
             .setAveragePrice(0.0)
             .setSumWindow(0.0)
             .setCountWindow(0)
             .setVolume(0.0)
+            .setClose(0.0)
             .build()
 
     override fun aggregator(newStock: Stock, current: Any): AveragePriceEvent {
-        val avgPriceMetric = getMetric(current)
+        val avgPriceMetric = current as AveragePriceEvent
         val averagePriceBuilder: AveragePriceEvent.Builder = AveragePriceEvent.newBuilder(avgPriceMetric)
         // Calc Fields
         val sumWindow = avgPriceMetric.getSumWindow() + newStock.getClose()
@@ -28,15 +30,9 @@ class AveragePrice: Metric<AveragePriceEvent>  {
             .setCountWindow(countWindow)
             .setAveragePrice(calcAvgPrice)
             .setVolume(newStock.getVolume())
+            .setClose(newStock.getClose())
 
         // Build new AveragePrice object
         return newAveragePrice.build()
-    }
-
-    override fun getMetric(event: Any): AveragePriceEvent {
-        return when (event) {
-            is AveragePriceEvent -> event
-            else -> empty()
-        }
     }
 }

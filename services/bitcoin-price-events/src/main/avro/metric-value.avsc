@@ -25,24 +25,28 @@
             {
               "name":"volume",
               "type":"double"
+            },
+            {
+              "name":"close",
+              "type":"double"
             }
           ]
         }
       ]
     },
     {
-      "name":"macd",
+      "name":"atr",
       "type":[
         {
           "type":"record",
-          "name":"MACDEvent",
+          "name":"ATREvent",
           "fields":[
             {
-              "name":"averagePrice",
+              "name":"averageTrueRange",
               "type":"double"
             },
             {
-              "name":"sumWindow",
+              "name":"trueRange",
               "type":"double"
             },
             {
@@ -50,7 +54,11 @@
               "type":"int"
             },
             {
-              "name":"volume",
+              "name":"sumWindow",
+              "type":"double"
+            },
+            {
+              "name":"close",
               "type":"double"
             }
           ]

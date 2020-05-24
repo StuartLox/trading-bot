@@ -1,11 +1,10 @@
 //package com.stuartloxton.bitcoinprice.streams
 //
-//import com.stuartloxton.bitcoinprice.AveragePrice
-//import com.stuartloxton.bitcoinprice.AveragePriceWindow
+//import com.stuartloxton.bitcoinprice.*
 //import org.apache.kafka.clients.consumer.ConsumerRecord
 //import org.joda.time.DateTime
 //import org.slf4j.LoggerFactory
-    //import org.springframework.beans.factory.annotation.Autowired
+//import org.springframework.beans.factory.annotation.Autowired
 //import org.springframework.kafka.annotation.KafkaListener
 //import org.springframework.kafka.support.Acknowledgment
 //import org.springframework.stereotype.Service
@@ -14,7 +13,7 @@
 //@Service
 //class Consumer {
 //    private val logger = LoggerFactory.getLogger(javaClass)
-//    var avePriceItems = mutableListOf<List<Double>>()
+//    var inputVector = mutableListOf<List<Double>>()
 //
 //    @Autowired
 //    private lateinit var inference: Inference
@@ -24,7 +23,7 @@
 //        containerFactory = "kafkaListenerContainerFactory"
 //    )
 //    fun consume(
-//        averagePrices: List<ConsumerRecord<AveragePriceWindow, AveragePrice>>,
+//        averagePrices: List<ConsumerRecord<BitcoinMetricEventWindow, BitcoinMetricEvent>>,
 //        ack: Acknowledgment
 //    ) {
 //        var commitOffsets = false
@@ -37,7 +36,6 @@
 //                    commitOffsets = processEvent(key, value)
 //                }
 //            }
-//
 //        } catch (e: Exception) {
 //            commitOffsets = false
 //        } finally {
@@ -47,15 +45,25 @@
 //        }
 //    }
 //
-//    fun processEvent(key: AveragePriceWindow, value: AveragePrice): Boolean {
-//        avePriceItems.add(listOf(value.getAveragePrice(), value.getVolume()))
-//        val prediction = inference.getPrediction(avePriceItems)
+//    fun setFeatures(value: BitcoinMetricEvent): List<Double> {
+//        // Extracts features
+//        val avg = value.getAvgPrice() as AveragePriceEvent
+//        val atr = value.getAtr() as ATREvent
+//        return listOf(avg.getAveragePrice(), atr.getAverageTrueRange())
+//    }
+//
+//    fun processEvent(key: BitcoinMetricEventWindow, value: BitcoinMetricEvent): Boolean {
+//        val features = setFeatures(value)
+//        inputVector.add(features)
+//
+//        val prediction = inference.getPrediction(inputVector)
 //        val datetime = DateTime(key.getWindowEnd()).toLocalDateTime()
-//        logger.info("Inference: $prediction, Items: ${avePriceItems.size}, windowEnd: $datetime")
+//        logger.info("Inference: $prediction, Items: ${inputVector.size}, windowEnd: $datetime")
+//
 //        var commitOffsets = false
 //        if (prediction != -1.0) {
-//            avePriceItems.removeAt(0)
-//            logger.info("Removing first elem of in memory db: ${avePriceItems.size}")
+//            inputVector.removeAt(0)
+//            logger.info("Removing first elem of in memory db: ${inputVector.size}")
 //            commitOffsets = true
 //        }
 //        return commitOffsets

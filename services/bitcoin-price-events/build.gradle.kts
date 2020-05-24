@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.2.7.RELEASE"
+    id("org.springframework.boot") version "2.3.0.RELEASE"
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
     id("com.bmuschko.docker-spring-boot-application") version "6.1.4"
     kotlin("jvm") version "1.3.61"
-    kotlin("plugin.spring") version "1.3.61"
+    kotlin("plugin.spring") version "1.3.72"
 }
 
 group = "com.stuartloxton.bitcoin-price-events"
@@ -51,13 +51,11 @@ dependencies {
 }
 
 buildscript {
-
     repositories {
         jcenter()
     }
     dependencies {
         classpath("com.commercehub.gradle.plugin:gradle-avro-plugin:0.17.0")
-
     }
 }
 apply(plugin = "com.commercehub.gradle.plugin.avro")

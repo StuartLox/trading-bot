@@ -2,6 +2,8 @@ package com.stuartloxton.bitcoinprice.config
 
 //import com.stuartloxton.bitcoinprice.AveragePrice
 //import com.stuartloxton.bitcoinprice
+import com.stuartloxton.bitcoinprice.BitcoinMetricEvent
+import com.stuartloxton.bitcoinprice.BitcoinMetricEventWindow
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import com.stuartloxton.bitcoinprice.streams.StockTimestampExtractor
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
@@ -85,7 +87,6 @@ class KafkaConfig {
         config.putAll(commonConfig())
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, streamsBtcMetricsGroupId)
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-        config.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, StockTimestampExtractor::class.java)
         return config
     }
 
@@ -107,10 +108,10 @@ class KafkaConfig {
     }
 
 //    @Bean
-//    fun avgPriceConsumer(): ConsumerFactory<, AveragePrice> {
+//    fun avgPriceConsumer(): ConsumerFactory<BitcoinMetricEventWindow, BitcoinMetricEventWindow> {
 //        val schemaRegistryClient: SchemaRegistryClient = CachedSchemaRegistryClient(schemaRegistryUrl, 3)
-//        val avgPriceSpecificAvroSerde = SpecificAvroSerde<AveragePrice>(schemaRegistryClient)
-//        val avgPriceWindowSpecificAvroSerde = SpecificAvroSerde<AveragePriceWindow>(schemaRegistryClient)
+//        val btcMetricEventWindow = SpecificAvroSerde<BitcoinMetricEventWindow>(schemaRegistryClient)
+//        val btcMetricEventWindow = SpecificAvroSerde<BitcoinMetricEvent>(schemaRegistryClient)
 //
 //    val defaultSerdeConfig = Collections.singletonMap(
 //        KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
@@ -124,7 +125,7 @@ class KafkaConfig {
 //            avgPriceSpecificAvroSerde.deserializer()
 //        )
 //    }
-
+//
 //    @Bean
 //    fun kafkaListenerContainerFactory(): KafkaListenerContainerFactory<*>? {
 //        val factory =

@@ -1,22 +1,21 @@
 package com.stuartloxton.bitcoinprice.streams
 
+import com.stuartloxton.bitcoinprice.ATREvent
 import com.stuartloxton.bitcoinprice.AveragePriceEvent
 import com.stuartloxton.bitcoinprice.BitcoinMetricEvent
 import com.stuartloxton.bitcoinprice.BitcoinMetricEventWindow
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
 import com.stuartloxton.bitcoinprice.streams.metrics.AveragePrice
 import com.stuartloxton.bitcoinprice.streams.metrics.BitcoinMetric
-import com.stuartloxton.bitcoinprice.streams.metrics.MACD
+import com.stuartloxton.bitcoinprice.streams.metrics.ATR
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.common.serialization.Serdes
-import org.apache.kafka.streams.StreamsBuilder
-import org.apache.kafka.streams.TestInputTopic
-import org.apache.kafka.streams.TestOutputTopic
-import org.apache.kafka.streams.TopologyTestDriver
+import org.apache.kafka.streams.*
+import org.joda.time.DateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.time.Duration
 import java.util.*
 
 
@@ -33,7 +33,7 @@ import java.util.*
 @SpringBootTest(classes = [
     KafkaConfig::class, Streams::class,
     BitcoinMetric::class, AveragePrice::class,
-    MACD::class
+    ATR::class
 ])
 class StreamsTest {
     @Autowired
@@ -97,9 +97,15 @@ class StreamsTest {
         btcEventMetricWindowSpecificAvroSerde.configure(defaultSerdeConfig,true)
     }
 
-    /*********
-     * TESTS
-     *********/
+    fun initStocks(secs: Long, r: Int, close:Double) {
+        var ts = 1577836800000L
+
+        for (i in 1..r) {
+            inputTopic.advanceTime(Duration.ofMillis(ts))
+            inputTopic.pipeInput("BTC", getStock(ts, close))
+            ts += Duration.ofSeconds(secs).toMillis()
+        }
+    }
 
     @BeforeEach
     fun setup() {
@@ -114,36 +120,63 @@ class StreamsTest {
         testDriver.close()
     }
 
+    /*********
+     * TESTS
+     *********/
+
     @Test
     fun validateIfTestDriverCreated() {
         assertNotNull(testDriver);
     }
 
     @Test
-    fun testOneMinSuppression() {
-        val ts = 1570800000L
-        inputTopic.pipeInput("BTC", getStock(ts, 100.0))
-        assertEquals(outputTopic.isEmpty, true)
-        val t = 60 * 1000L
-        inputTopic.pipeInput("BTC", getStock(ts + t, 100.0))
-        assertEquals(outputTopic.isEmpty, false)
-    }
-
-    @Test
-    fun testAveragePriceWindow() {
-        val ts = 1570800000L
-        inputTopic.pipeInput("BTC", getStock(ts, 100.0))
-        inputTopic.pipeInput("BTC", getStock(ts+20 * 1000L, 120.0))
-        inputTopic.pipeInput("BTC", getStock(ts + 60 * 1000L, 120.0))
-
+    fun testAveragePrice() {
+        initStocks(10, 100, 120.0)
         val rec = outputTopic.readRecord()
         val avg = rec.value.getAvgPrice() as AveragePriceEvent
         //Test Key
-        assertEquals(1570860000, rec.key().getWindowEnd())
+        assertEquals(1577836860000, rec.key().getWindowEnd())
 
         //Test Value
-        assertEquals(220.0, avg.getSumWindow())
-        assertEquals(2, avg.getCountWindow())
-        assertEquals(110.0, avg.getAveragePrice())
+        assertEquals(720.0, avg.getSumWindow())
+        assertEquals(6, avg.getCountWindow())
+        assertEquals(120.0, avg.getAveragePrice())
+    }
+
+    @Test
+    fun testAverageTrueRange() {
+        initStocks(10, 100, 120.0)
+        val rec = outputTopic.readRecord()
+        val avg = rec.value.getAtr() as ATREvent
+        //Test Key
+        assertEquals(1577836860000, rec.key().getWindowEnd())
+
+        //Test Value
+        assertEquals(3.3333333333333335, avg.getAverageTrueRange())
+    }
+
+
+    @Test
+    fun testStateStore() {
+        initStocks(10, 100, 120.0)
+//        val rec1 = outputTopic.readRecord()
+//        val avg1 = rec1.value.getAvgPrice() as AveragePriceEvent
+//        assertEquals(2, avg1.getCountWindow())
+//        assertEquals("2019-10-13T09:43:00.000+11:00", DateTime(rec1.key().getWindowEnd()).toDateTimeISO().toString())
+//
+//        val rec2 = outputTopic.readRecord()
+//        val avg2 = rec2.value.getAvgPrice() as AveragePriceEvent
+//        assertEquals(2, avg2.getCountWindow())
+//        assertEquals("2019-10-13T09:44:00.000+11:00", DateTime(rec2.key().getWindowEnd()).toDateTimeISO().toString())
+
+//        val rec3 = outputTopic.readRecord()
+//        assertEquals("2019-10-13T09:45:00.000+11:00", DateTime(rec3.key().getWindowEnd()).toDateTimeISO().toString())
+
+        val rec = outputTopic.readRecordsToList()
+        rec.forEach {
+            println(DateTime(it.key().getWindowEnd()).toDateTimeISO().toString())
+            println(it.value.getAtr() as ATREvent)
+        }
+//        assertEquals("2019-10-13T09:45:00.000+11:00", DateTime(rec3.key().getWindowEnd()).toDateTimeISO().toString())
     }
 }

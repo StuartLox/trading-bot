@@ -12,37 +12,30 @@ import org.springframework.stereotype.Component
 class BitcoinMetric: Metric<BitcoinMetricEvent> {
 
     @Autowired
-    private lateinit var averagePrice: AveragePrice
+    lateinit var averagePrice: AveragePrice
 
     @Autowired
-    private lateinit var macd: MACD
+    private lateinit var atr: ATR
 
-    override fun empty(): BitcoinMetricEvent = BitcoinMetricEvent.newBuilder()
-        .setMacd(macd.empty())
-        .setAvgPrice(averagePrice.empty())
+    override fun identity(): BitcoinMetricEvent = BitcoinMetricEvent.newBuilder()
+        .setAtr(atr.identity())
+        .setAvgPrice(averagePrice.identity())
         .build()
 
     override fun aggregator(newStock: Stock, current: Any): BitcoinMetricEvent {
-        val currentMetricEvent = getMetric(current)
+        val currentMetricEvent = current as BitcoinMetricEvent
         val bitcoinMetricEventBuilder: BitcoinMetricEvent.Builder = BitcoinMetricEvent.newBuilder(currentMetricEvent)
 
         // Construct Metrics
         val avgPrice = averagePrice.aggregator(newStock, currentMetricEvent.getAvgPrice())
-        val macdEvent = macd.aggregator(newStock,  currentMetricEvent.getMacd())
+        val atrEvent = atr.aggregator(newStock,  currentMetricEvent.getAtr())
 
         // Set Fields
         val bitcoinMetrics = bitcoinMetricEventBuilder
             .setAvgPrice(avgPrice)
-            .setMacd(macdEvent)
+            .setAtr(atrEvent)
         // Build new Metrics object
         return bitcoinMetrics.build()
-    }
-
-    override fun getMetric(event: Any): BitcoinMetricEvent {
-        return when (event) {
-            is BitcoinMetricEvent -> event
-            else -> empty()
-        }
     }
 
     fun windowBuilder(symbol: String, windowEnd: Long): BitcoinMetricEventWindow {
