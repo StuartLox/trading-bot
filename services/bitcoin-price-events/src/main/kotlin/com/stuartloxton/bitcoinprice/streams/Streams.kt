@@ -66,6 +66,7 @@ class Streams {
             .toStream()
             .selectKey{ key, _ -> bitcoinMetric.windowBuilder(key.key(), key.window().end())}
 
+
         topology.to(kafkaConfig.btcMetricsTopic, Produced.with(bitcoinMetricWindowSpecificAvroSerde, bitcoinMetricSpecificAvroSerde))
 
 

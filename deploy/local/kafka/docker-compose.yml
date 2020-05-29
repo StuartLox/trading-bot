@@ -117,6 +117,8 @@ services:
       - schema-registry
     ports:
       - "8083:8083"
+    volumes:
+    - $HOME/.aws/credentials:/root/.aws/credentials:ro
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
