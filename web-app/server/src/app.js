@@ -2,7 +2,7 @@ var express = require('express') //npm install express
   , bodyParser = require('body-parser') // npm install body-parser
   , http = require('http')
 
-var stockListener = require("./stockListener.js");
+var metricListener = require("./metricListener.js");
 var sseMW = require('./sse');
 
 var PORT = process.env.SERVER_PORT;
@@ -39,11 +39,16 @@ updateSseClients = function (message) {
 
 console.log('server running on port 3000');
 
-var stockCache = {};
-stockListener.subscribeTostocks((message) => {
-  var stockEvent = JSON.parse(message);
-  stockCache[stockEvent.symbol] = stockEvent;
-  var newData = JSON.stringify({symbol: "BTC", timestamp: stockEvent.windowEnd, averagePrice: stockEvent.averagePrice})
+var metricCache = {};
+metricListener.subscribeTometrics((message) => {
+  var metricEvent = JSON.parse(message);
+  metricCache[metricEvent.symbol] = metricEvent;
+ 
+  var newData = JSON.stringify({
+    symbol: "BTC", timestamp: metricEvent.windowEnd, 
+    averagePrice: metricEvent.avgPrice.averagePrice,
+    atr:  metricEvent.atr.averageTrueRange
+  })
   var eventString = `event: priceStateUpdate\ndata: ${newData}\n\n`;
   updateSseClients(eventString);
 })

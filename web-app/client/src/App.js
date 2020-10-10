@@ -22,6 +22,7 @@ class App extends React.Component {
   updatePriceState(priceState) {
     const date = new Date(priceState.timestamp).toLocaleTimeString()
     const averagePrice = parseFloat(priceState.averagePrice).toFixed(2)
+    console.log(priceState);
     const record = { timestamp: date, value: averagePrice }
 
     this.state.data.push(record)

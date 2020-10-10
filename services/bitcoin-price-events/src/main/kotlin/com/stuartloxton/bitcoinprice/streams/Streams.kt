@@ -53,10 +53,11 @@ class Streams {
             StockTimestampExtractor(), null))
             .groupByKey()
             .windowedBy(
-                TimeWindows.of(Duration.ofMinutes(100))
+                TimeWindows.of(Duration.ofMinutes(2))
                     .advanceBy(Duration.ofMinutes(1))
                     .grace(Duration.ZERO)
             )
+
             .aggregate(
                 { bitcoinMetric.identity() },
                 { _, stc, aggregate -> bitcoinMetric.aggregator(stc, aggregate)},
@@ -64,19 +65,11 @@ class Streams {
             )
             .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
             .toStream()
-            .selectKey{ key, _ -> bitcoinMetric.windowBuilder(key.key(), key.window().end())}
 
+            .selectKey{ key, _ -> bitcoinMetric.windowBuilder(key.key(), key.window().end())}
 
         topology.to(kafkaConfig.btcMetricsTopic, Produced.with(bitcoinMetricWindowSpecificAvroSerde, bitcoinMetricSpecificAvroSerde))
 
-
-        // Create metrics ktable
-//        val metrics: KTable<BitcoinMetricEventWindow, BitcoinMetricEvent> = builder.table(
-//            kafkaConfig.btcMetricsTopic,
-//            Materialized.`as`<BitcoinMetricEventWindow, BitcoinMetricEvent, KeyValueStore<Bytes, ByteArray>>(
-//                "metricsStore"
-//            ).withKeySerde(bitcoinMetricWindowSpecificAvroSerde).withValueSerde(bitcoinMetricSpecificAvroSerde)
-//        )
         return topology
 
     }

@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const schemaRegistryUrl = process.env.SCHEMA_REGISTRY_URL;
 const registry = require('avro-schema-registry')(schemaRegistryUrl);
-var stockListener = module.exports;
+var metricListner = module.exports;
 
 
 const kafkaTopic = process.env.KAFKA_TOPIC;
@@ -22,7 +22,7 @@ var options = {
 
 var subscribers = [];
 
-stockListener.subscribeTostocks = function (callback) {
+metricListner.subscribeTometrics = function (callback) {
   subscribers.push(callback);
 }
 
