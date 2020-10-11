@@ -15,14 +15,17 @@ class App extends React.Component {
   }
 
   componentDidMount() {
+    const util = require('util');
+    util.inspect(Date.now())
     this.eventSource.addEventListener('priceStateUpdate', (e) =>
       this.updatePriceState(JSON.parse(e.data)));
   }
 
   updatePriceState(priceState) {
+   
+
     const date = new Date(priceState.timestamp).toLocaleTimeString()
     const averagePrice = parseFloat(priceState.averagePrice).toFixed(2)
-    console.log(priceState);
     const record = { timestamp: date, value: averagePrice }
 
     this.state.data.push(record)

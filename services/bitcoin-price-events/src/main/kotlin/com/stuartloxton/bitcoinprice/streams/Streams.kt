@@ -57,7 +57,6 @@ class Streams {
                     .advanceBy(Duration.ofMinutes(1))
                     .grace(Duration.ZERO)
             )
-
             .aggregate(
                 { bitcoinMetric.identity() },
                 { _, stc, aggregate -> bitcoinMetric.aggregator(stc, aggregate)},
