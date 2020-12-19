@@ -1,5 +1,7 @@
 # Trading Bot
 
+![BitcoinPrice](assets/BitcoinPrice.gif)
+
 ### Overview
 
 Building a realtime crypto trading platform using ML.
