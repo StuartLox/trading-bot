@@ -4,8 +4,6 @@
 
 Building a realtime crypto trading platform using ML.
 
----
-
 # Architecture
 
 * **K8s** - Container Orchestraion
