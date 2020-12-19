@@ -2,11 +2,11 @@
 
 ### Overview
 
-Building a realtime trading platform using ML to perform high-frequency crypto trading.
+Building a realtime crypto trading platform using ML.
 
 ---
 
-# Stack
+# Architecture
 
 * **K8s** - Container Orchestraion
 * **Kafka** - Event Store
