@@ -1,7 +1,4 @@
 package com.stuartloxton.bitcoinprice.adapter
-//
-//
-//
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import org.json.JSONArray
 import org.json.JSONObject

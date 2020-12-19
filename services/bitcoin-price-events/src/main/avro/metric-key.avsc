@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "name": "AveragePriceWindow",
+  "name": "BitcoinMetricEventWindow",
   "namespace": "com.stuartloxton.bitcoinprice",
   "fields": [
     {

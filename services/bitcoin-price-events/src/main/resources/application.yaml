@@ -5,7 +5,7 @@ spring:
 application:
   kafka:
     btc-event-topic: ${BTC_EVENT_TOPIC}
-    avg-price-topic: ${AVG_PRICE_TOPIC}
+    btc-metrics-topic: ${BTC_METRICS_TOPIC}
     bootstrap: ${KAFKA_BOOTSTRAP_SERVERS}
     schema-registry: ${SCHEMA_REGISTRY_URL}
     group-id: ${STREAMS_BTC_GROUPID}

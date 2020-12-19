@@ -1,17 +1,17 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.2.4.RELEASE"
+    id("org.springframework.boot") version "2.3.0.RELEASE"
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
     id("com.bmuschko.docker-spring-boot-application") version "6.1.4"
     kotlin("jvm") version "1.3.61"
-    kotlin("plugin.spring") version "1.3.61"
+    kotlin("plugin.spring") version "1.3.72"
 }
 
 group = "com.stuartloxton.bitcoin-price-events"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
-
+var kafkaVersion = "2.5.0"
 
 repositories {
     gradlePluginPortal()
@@ -32,10 +32,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.springframework.kafka:spring-kafka")
-    implementation("org.apache.kafka:kafka-streams:2.4.0")
-    implementation("org.apache.kafka:kafka-clients:2.4.0")
-    implementation("io.confluent:kafka-avro-serializer:5.4.0")
-    implementation ("io.confluent:kafka-streams-avro-serde:5.3.1")
+    implementation("org.apache.kafka:kafka-streams:${kafkaVersion}")
+    implementation("org.apache.kafka:kafka-streams-test-utils:${kafkaVersion}")
+    implementation("org.apache.kafka:kafka-clients:${kafkaVersion}")
+    implementation ("io.confluent:kafka-streams-avro-serde:5.5.0")
     implementation("org.apache.avro:avro:1.9.1")
     implementation("org.json:json:20190722")
 
@@ -51,13 +51,11 @@ dependencies {
 }
 
 buildscript {
-
     repositories {
         jcenter()
     }
     dependencies {
         classpath("com.commercehub.gradle.plugin:gradle-avro-plugin:0.17.0")
-
     }
 }
 apply(plugin = "com.commercehub.gradle.plugin.avro")

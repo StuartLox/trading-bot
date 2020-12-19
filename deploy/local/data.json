@@ -1,0 +1,22 @@
+{
+  "name": "data-connector.v1",
+  "config": {
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "flush.size": "1000",
+    "rotate.schedule.interval.ms": "300000",
+    "rotate.interval.ms": "180000",
+    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+    "locale": "US",
+    "partition.duration.ms": "86400000",
+    "partitioner.class": "io.confluent.connect.storage.partitioner.TimeBasedPartitioner",
+    "path.format": "'year'=YYYY/'month'=MM/'day'=dd",
+    "s3.acl.canned": "bucket-owner-full-control",
+    "s3.bucket.name": "stu-kafka-connect-events",
+    "s3.region": "ap-southeast-2",
+    "timestamp.extractor": "Record",
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "timezone": "UTC",
+    "topics": "adapter.bitcoin.raw.v1",
+    "topics.dir": "dev"
+  }
+}
