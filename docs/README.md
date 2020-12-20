@@ -256,7 +256,8 @@ Graph below shows look ahead LSTM model predictions during model testing.
 
 Node app creates a temporary consumer group which starts from latest each time a new client connects. Server then sends realtime updates to React Dashboard using server-sent events (SSE). 
 
-## GIF below shows rolling average bitcoin price updating in realtime.
+## Dashboard Demo:
+* Feature 1. Average Price Metric
 
 ![BitcoinPrice](assets/BitcoinPrice.gif)
 
