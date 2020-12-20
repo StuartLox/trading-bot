@@ -1,31 +1,33 @@
 # Bitcoin Price Prediction
+## Project Overview
 
+Aims to predict bitcoin prices, with the primary focus being realtime feature engineering and low latency inference from a live event stream. 
+
+*Note best practises have not be applied for model training and evaluation components.*
 ## Time Value of Data
 
 
-For most modern applications much of the value comes from driving an action in response to a business event or user behaviour. Unfortunatley, most machine learning systems rely on after the fact batch processes, due to the immense challenge of reliably cleaning, transforming and merging multiple sources of data in order to make a single model prediction.
+For most modern applications much of the value comes from driving an action in response to a business event or user behaviour. Unfortunatley, most machine learning systems rely on after the fact batch processes - due to the immense challenge of reliably cleaning, transforming and merging multiple sources of data in order to make a single model prediction.
 
 
 ![image](assets/DataTimeValue.png)
 
-## Project Overview
-
-This project aims to predict bitcoin prices as well as addressing the above points by leveraging Websockets, Kafka Streams and LSTMs. 
 
 # Project Stack
 
 * **K8s** - Container Orchestraion
 * **Kafka** - Event Store
+* **Schema Registry** - Schema validation of kafka events
 * **Kafka Streams** - Stream processing
 * **S3** - File System, Landing Zone for streaming data and store for model artefacts.
 * **Keras Tensorflow 2** - Framework for building, testing and hyperparameter tuning LSTM network.
 * **Deeplearning4J** - Serializes model so inference can be performed locally by Kafka Consumer rather than making an additional rest call which significantly reduces latency.
 * **SSE & React Front-end** - Node application consumers model features and streams them to a React Dashboard which renders model visuals in a dashboard in realtime.
 
-## Solution Archetecture 
+
+## Real-time ML - Solution Archetecture Diagram
 ![image](assets/BitcoinStreamsTopology.png)
 
-**AWS components TODO**
 
 ## Infrastructure
 
@@ -38,7 +40,7 @@ Kotlin service ([bitcoin-price-adapter](https://github.com/StuartLox/trading-bot
 
 The Feature Vector for the ML model is aggregated in realtime using Kafka Streams.  
 
-### Streams Pipeline
+### Kafka Streams Pipeline
 <details>
 <summary>Code</summary>
 
@@ -94,7 +96,7 @@ class BitcoinMetric: Metric<BitcoinMetricEvent> {
 ```
 </details>
 
-### Average True Range
+### Feature 1. Average True Range
 <details>
 <summary>Code</summary>
 
@@ -141,7 +143,7 @@ class AveragePrice: Metric<AveragePriceEvent>  {
 
 </details>
 
-### Average True Range
+### Feature 2. Average True Range
 <details>
 <summary>Code</summary>
 
@@ -244,10 +246,15 @@ class Inference {
 ```
 </details>
 
+## LSTM model predictions
+
+Graph below shows look ahead LSTM model predictions during model testing.
+
+![Prediction](assets/Prediction.gif)
 
 ## SSE & React Dashboard
 
-Node application consumer model features and streams them to a React Dashboard which renders model visuals in realtime. GIF below shows rolling average bitcoin price.
+Node app consumes model features from Kafka and opens up a long running HTTP connection. Then sends through server-sent events (SSE) then sends them to a React Dashboard. GIF below shows rolling average bitcoin price updating in realtime.
 
 ![BitcoinPrice](assets/BitcoinPrice.gif)
 
@@ -256,4 +263,5 @@ Node application consumer model features and streams them to a React Dashboard w
 * Introduce policy to determine whether to buy, hold or sell given price prediction.
 * Extend portfolio to include multiple instruments, rather than just bitcoin.
 * Build sagemaker pipeline so model training, hyperparameter tuning and evaluation can be automated and run on a monthly schedule.
+* Get app to cache latest model on startup
 * Extend model to include more complex financial indicators and track performance of model and trading policy.
