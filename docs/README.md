@@ -38,8 +38,7 @@ All infrastructure can run on k8s (see [data-platform](https://github.com/Stuart
 Kotlin service ([bitcoin-price-adapter](https://github.com/StuartLox/trading-bot/blob/master/services/bitcoin-price-adapter/src/main/kotlin/com/stuartloxton/bitcoinprice/adapter/ReactiveWebsocketHandler.kt)) listens to a websocket from `binance.com` and streams realtime pricing (High, Low, Open Close) events to the `adapter.bicoin-price-events` topic on Kafka. Pricing data is produced every 3-5 seconds.
 ## Service 2: Bitcoin Price Events
 
-Kotlin service responsible for building each of the model features (Rolling average price and average true range). Serive then consumes events making predictions with the serialised tensorflow model.
-
+Kotlin service responsible for building each of the model features (Rolling average price and average true range) which are produced to a single topic every minute. Service then consumes feature topic and makes a 10-step lookahead time series prediction. *Note model at least 50mins of data to make a prediction as it will run from latest*
 
 ### Kafka Streams Pipeline
 <details>
