@@ -1,7 +1,7 @@
 # Bitcoin Price Prediction
 ## Project Overview
 
-Aims to predict bitcoin prices, with the primary focus being realtime feature engineering and low latency inference from a live event stream. 
+Predict bitcoin prices using deep learning, with the primary focus being realtime feature engineering and low latency inference from a live event stream. 
 
 *Note best practises have not be applied for model training and evaluation components.*
 ## Time Value of Data
@@ -38,7 +38,7 @@ All infrastructure can run on k8s (see [data-platform](https://github.com/Stuart
 Kotlin service ([bitcoin-price-adapter](https://github.com/StuartLox/trading-bot/blob/master/services/bitcoin-price-adapter/src/main/kotlin/com/stuartloxton/bitcoinprice/adapter/ReactiveWebsocketHandler.kt)) listens to a websocket from `binance.com` and streams realtime pricing (High, Low, Open Close) events to the `adapter.bicoin-price-events` topic on Kafka. Pricing data is produced every 3-5 seconds.
 ## Service 2: Bitcoin Price Events
 
-The Feature Vector for the ML model is aggregated in realtime using Kafka Streams.  
+The Feature Vector for the ML model is aggregated in realtime using Kafka Streams. Then produces to features kafka topic. Consumer listens to results and performs 
 
 ### Kafka Streams Pipeline
 <details>
@@ -250,18 +250,18 @@ class Inference {
 
 Graph below shows look ahead LSTM model predictions during model testing.
 
-![Prediction](assets/Prediction.gif)
+![Prediction](assets/Prediction.png)
 
 ## SSE & React Dashboard
 
-Node app consumes model features from Kafka and opens up a long running HTTP connection. Then sends through server-sent events (SSE) then sends them to a React Dashboard. GIF below shows rolling average bitcoin price updating in realtime.
+Node app consumes model features from Kafka and Then server-sent events (SSE) to React Dashboard. GIF below shows rolling average bitcoin price updating in realtime.
 
 ![BitcoinPrice](assets/BitcoinPrice.gif)
 
 ## Possible Extensions
  
 * Introduce policy to determine whether to buy, hold or sell given price prediction.
-* Extend portfolio to include multiple instruments, rather than just bitcoin.
+* Extend portfolio to include multiple fincnaical instruments, rather than just bitcoin.
 * Build sagemaker pipeline so model training, hyperparameter tuning and evaluation can be automated and run on a monthly schedule.
 * Get app to cache latest model on startup
-* Extend model to include more complex financial indicators and track performance of model and trading policy.
+* Extend model to include additional financial indicators and track performance of model and trading policy.
