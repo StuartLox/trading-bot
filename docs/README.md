@@ -1,50 +1,259 @@
 # Bitcoin Price Prediction
 
-## Summary 
-
-For many online services much of the value comes from taking an action in response to a business event or user behaviour. Unfortunatley, most machine learning systems do not operate in the same way, as they have to rely on after the fact batch processes, due to the immense challenge of reliably cleaning, transforming and merging multiple sources of data to buld a single feature vector to perform model inference. For this reason, it is much simplier to perform all this tasks as an offline batch process. 
+## Time Value of Data
 
 
+For most modern applications much of the value comes from driving an action in response to a business event or user behaviour. Unfortunatley, most machine learning systems rely on after the fact batch processes, due to the immense challenge of reliably cleaning, transforming and merging multiple sources of data in order to make a single model prediction.
 
 
-<details>
-<summary>Metric Interface</summary>
-<br>
-```kotlin
-interface Metric<T> {
-    fun identity(): T
-    fun aggregator(newStock: Stock, current: Any): T
-}
-```
-</details>
+![image](assets/DataTimeValue.png)
 
-# This
+## Project Overview
 
-For example, high-frequency crypto-currency, forex, and stock market price. Any "information arbitrage" - i.e leveraging short-term pricing information to predict market movements
+This project aims to predict bitcoin prices as well as addressing the above points by leveraging Websockets, Kafka Streams and LSTMs. 
 
-
-Alternativly, a realtime approach can be achieved with realtime events event-sourcing and using streaming platforms
-
-
-# Architecture
+# Project Stack
 
 * **K8s** - Container Orchestraion
 * **Kafka** - Event Store
 * **Kafka Streams** - Stream processing
 * **S3** - File System, Landing Zone for streaming data and store for model artefacts.
-* **Sagemaker** - Hosted Notebooks for model training, evaluation and deployment of new models.
-* **React** - Front-end framework
+* **Keras Tensorflow 2** - Framework for building, testing and hyperparameter tuning LSTM network.
+* **Deeplearning4J** - Serializes model so inference can be performed locally by Kafka Consumer rather than making an additional rest call which significantly reduces latency.
+* **SSE & React Front-end** - Node application consumers model features and streams them to a React Dashboard which renders model visuals in a dashboard in realtime.
 
+## Solution Archetecture 
 ![image](assets/BitcoinStreamsTopology.png)
 
-## Data Sources
+**AWS components TODO**
 
-Kotlin service listens to a websocket from `binance.com` and streams realtime pricing data to the `adapter.bicoin-price-events` topic on Kafka. These event.
-## Data Transformation
+## Infrastructure
+
+All infrastructure can run on k8s (see [data-platform](https://github.com/StuartLox/data-platform)) or run locally using `deploy/kafka/local/docker-compose.yaml`
+
+## Service 1: Bitcoin Price Adapter
+
+Kotlin service ([bitcoin-price-adapter](https://github.com/StuartLox/trading-bot/blob/master/services/bitcoin-price-adapter/src/main/kotlin/com/stuartloxton/bitcoinprice/adapter/ReactiveWebsocketHandler.kt)) listens to a websocket from `binance.com` and streams realtime pricing (High, Low, Open Close) events to the `adapter.bicoin-price-events` topic on Kafka. Pricing data is produced every 3-5 seconds.
+## Service 2: Bitcoin Price Events
+
+The Feature Vector for the ML model is aggregated in realtime using Kafka Streams.  
+
+### Streams Pipeline
+<details>
+<summary>Code</summary>
+
+```kotlin
+package com.stuartloxton.bitcoinprice.streams.metrics
+
+import com.stuartloxton.bitcoinprice.BitcoinMetricEvent
+import com.stuartloxton.bitcoinprice.BitcoinMetricEventWindow
+import org.springframework.beans.factory.annotation.Autowired
+
+import com.stuartloxton.bitcoinpriceadapter.Stock
+import org.springframework.stereotype.Component
 
 
-## Model
+@Component
+class BitcoinMetric: Metric<BitcoinMetricEvent> {
 
-* Use an LTSM to perform multivariate time series prediction on a . 
+    @Autowired
+    lateinit var averagePrice: AveragePrice
+
+    @Autowired
+    private lateinit var atr: ATR
+
+    override fun identity(): BitcoinMetricEvent = BitcoinMetricEvent.newBuilder()
+        .setAtr(atr.identity())
+        .setAvgPrice(averagePrice.identity())
+        .build()
+
+    override fun aggregator(newStock: Stock, current: Any): BitcoinMetricEvent {
+        val currentMetricEvent = current as BitcoinMetricEvent
+        val bitcoinMetricEventBuilder: BitcoinMetricEvent.Builder = BitcoinMetricEvent.newBuilder(currentMetricEvent)
+
+        // Construct Metrics
+        val avgPrice = averagePrice.aggregator(newStock, currentMetricEvent.getAvgPrice())
+        val atrEvent = atr.aggregator(newStock,  currentMetricEvent.getAtr())
+
+        // Set Fields
+        val bitcoinMetrics = bitcoinMetricEventBuilder
+            .setAvgPrice(avgPrice)
+            .setAtr(atrEvent)
+        // Build new Metrics object
+        return bitcoinMetrics.build()
+    }
+
+    fun windowBuilder(symbol: String, windowEnd: Long): BitcoinMetricEventWindow {
+        val avgPriceWindow = BitcoinMetricEventWindow.newBuilder()
+            .setSymbol(symbol)
+            .setWindowEnd(windowEnd)
+            .build()
+        return avgPriceWindow
+    }
+}
+```
+</details>
+
+### Average True Range
+<details>
+<summary>Code</summary>
+
+```kotlin
+package com.stuartloxton.bitcoinprice.streams.metrics
+
+import com.stuartloxton.bitcoinprice.AveragePriceEvent
+import com.stuartloxton.bitcoinpriceadapter.Stock
+import org.springframework.stereotype.Component
+
+@Component
+class AveragePrice: Metric<AveragePriceEvent>  {
+
+    override fun identity(): AveragePriceEvent =
+        AveragePriceEvent.newBuilder()
+            .setAveragePrice(0.0)
+            .setSumWindow(0.0)
+            .setCountWindow(0)
+            .setVolume(0.0)
+            .setClose(0.0)
+            .build()
+
+    override fun aggregator(newStock: Stock, current: Any): AveragePriceEvent {
+        val avgPriceMetric = current as AveragePriceEvent
+        val averagePriceBuilder: AveragePriceEvent.Builder = AveragePriceEvent.newBuilder(avgPriceMetric)
+        // Calc Fields
+        val sumWindow = avgPriceMetric.getSumWindow() + newStock.getClose()
+        val countWindow = avgPriceMetric.getCountWindow() + 1
+        val calcAvgPrice = sumWindow / countWindow
+
+        // Set Fields
+        val newAveragePrice = averagePriceBuilder
+            .setSumWindow(sumWindow)
+            .setCountWindow(countWindow)
+            .setAveragePrice(calcAvgPrice)
+            .setVolume(newStock.getVolume())
+            .setClose(newStock.getClose())
+
+        // Build new AveragePrice object
+        return newAveragePrice.build()
+    }
+}
+```
+
+</details>
+
+### Average True Range
+<details>
+<summary>Code</summary>
+
+```kotlin
+package com.stuartloxton.bitcoinprice.streams.metrics
+
+import com.stuartloxton.bitcoinprice.ATREvent
+import com.stuartloxton.bitcoinpriceadapter.Stock
+import org.springframework.stereotype.Component
+import java.lang.Math.abs
+
+
+@Component
+class ATR: Metric<ATREvent> {
+    override fun identity(): ATREvent = ATREvent.newBuilder()
+        .setAverageTrueRange(0.0)
+        .setTrueRange(0.0)
+        .setSumWindow(0.0)
+        .setCountWindow(0)
+        .setClose(0.0)
+        .build()
+
+    override fun aggregator(newStock: Stock, current: Any): ATREvent {
+        val atrMetric = current as ATREvent
+        val atrBuilder: ATREvent.Builder = ATREvent.newBuilder(atrMetric)
+        // Calc Fields
+        val countWindow = atrMetric.getCountWindow() + 1
+
+        val v1 = newStock.getClose() - newStock.getLow()
+        val v2 = abs(newStock.getHigh() - newStock.getClose())
+        val v3 = abs(newStock.getLow() - newStock.getClose())
+
+        val trueRange = maxOf(v1, v2, v3)
+        val atr = trueRange / countWindow
+
+        // Set Fields
+        val newAtr = atrBuilder
+            .setCountWindow(countWindow)
+            .setClose(newStock.getClose())
+            .setTrueRange(trueRange)
+            .setAverageTrueRange(atr)
+
+        // Build new AveragePrice object
+        return newAtr.build()
+    }
+}
+```
+
+</details>
+
+### Model Inference Component
+
+
+<details>
+<summary>Code</summary>
+
+```kotlin
+package com.stuartloxton.bitcoinprice.streams
+
+import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
+import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.factory.Nd4j
+import org.nd4j.linalg.io.ClassPathResource
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
+
+@Component
+class Inference {
+    private val mPath = "model.h5"
+    private val lstm = ClassPathResource(mPath).getFile().getPath()
+    private val model = KerasModelImport.importKerasSequentialModelAndWeights(lstm, false)
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    private fun buildTensor(): INDArray {
+        val timeSteps = 50
+        val rows = 1
+        val columns = 2
+        return  Nd4j.zeros(rows, columns, timeSteps)
+    }
+
+    fun getPrediction(data: List<List<Double>>): Double {
+        val features = buildTensor()
+        if (data.size == 50) {
+            data.forEachIndexed { index, it ->
+                logger.info("AVG Price - ${it.get(0)}")
+                // Average Price
+                features.putScalar(intArrayOf(0, 0, index), it.get(0))
+                // ATR
+                features.putScalar(intArrayOf(0, 1, index), it.get(1))
+            }
+            logger.info("Size - ${data.size} Performing prediction")
+            return model.output(features).getDouble(0)
+        }
+        else {
+            logger.info("Size - ${data.size} Not enough data to perform prediction")
+            return -1.0
+         }
+    }
+}
+```
+</details>
+
+
+## SSE & React Dashboard
+
+Node application consumer model features and streams them to a React Dashboard which renders model visuals in realtime. GIF below shows rolling average bitcoin price.
 
 ![BitcoinPrice](assets/BitcoinPrice.gif)
+
+## Possible Extensions
+ 
+* Introduce policy to determine whether to buy, hold or sell given price prediction.
+* Extend portfolio to include multiple instruments, rather than just bitcoin.
+* Build sagemaker pipeline so model training, hyperparameter tuning and evaluation can be automated and run on a monthly schedule.
+* Extend model to include more complex financial indicators and track performance of model and trading policy.
