@@ -1,10 +1,12 @@
 # Bitcoin Price Prediction
+
+
 ## Project Overview
 
 Predict bitcoin prices using deep learning, with the primary focus being realtime feature engineering and low latency inference from a live event stream. 
 
 *Note best practises have not be applied for model training and evaluation components.*
-## Time Value of Data
+## Why Realtime? - Time Value of Data
 
 
 For most modern applications much of the value comes from driving an action in response to a business event or user behaviour. Unfortunatley, most machine learning systems rely on after the fact batch processes - due to the immense challenge of reliably cleaning, transforming and merging multiple sources of data in order to make a single model prediction.
