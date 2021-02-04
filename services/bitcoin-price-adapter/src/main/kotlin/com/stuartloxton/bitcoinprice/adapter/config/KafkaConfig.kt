@@ -26,9 +26,6 @@ class KafkaConfig {
     @Value("\${application.kafka.bootstrap}")
     var bootstrapUrl: String = ""
 
-    @Value("\${application.kafka.schema-registry}")
-    var schemaRegistryUrl: String = ""
-
     @Value("\${application.kafka.hasSecret}")
     var hasSecret: Boolean = false
 
@@ -38,16 +35,33 @@ class KafkaConfig {
     @Value("\${application.kafka.password}")
     var password: String = ""
 
+    @Value("\${application.schema-registry.url}")
+    var schemaRegistryUrl: String = ""
+
+    @Value("\${application.schema-registry.username}")
+    var srUsername: String = ""
+
+    @Value("\${application.schema-registry.password}")
+    var srPassword: String = ""
+
+    fun securityConfig(): HashMap<String, Any> {
+        val config = HashMap<String, Any>()
+        val saslConfig = "org.apache.kafka.common.security.plain.PlainLoginModule required" +
+                "username=\"$username\" password=\"$password\";"
+        config.put("sasl.jaas.config", saslConfig)
+        config.put("security.protocol", "SASL_SSL")
+        config.put("sasl.mechanism", "PLAIN")
+        config.put("basic.auth.credentials.source", "USER_INFO")
+        config.put("basic.auth.user.info", "$srUsername:$srPassword")
+        return config
+    }
+
     fun commonConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
         config.put("bootstrap.servers", bootstrapUrl)
         config.put("schema.registry.url", schemaRegistryUrl)
         if (hasSecret) {
-            val jaasTemplate = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";"
-            val jaasCfg = String.format(jaasTemplate, username, password)
-            config.put("sasl.jaas.config", jaasCfg)
-            config.put("security.protocol", "SASL_PLAINTEXT")
-            config.put("sasl.mechanism", "PLAIN")
+            config.putAll(securityConfig())
         }
         return config
     }

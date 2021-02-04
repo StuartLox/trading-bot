@@ -14,7 +14,7 @@ import java.net.URI
 
 @Component
 class ReactiveWebSocketHandler(private val stockEventProducer: StockEventProducer): ApplicationRunner {
-    @Value("\${application.btc-stream-uri}")
+    @Value("\${application.btc-stream-url}")
     private val btcUri = ""
     private val logger: Logger = LoggerFactory.getLogger(ReactiveWebSocketHandler::class.java)
 
@@ -29,6 +29,7 @@ class ReactiveWebSocketHandler(private val stockEventProducer: StockEventProduce
                 val low = item.getDouble("l")
                 val close = item.getDouble("c")
                 val timestamp = item.getLong("E")
+
                 return Stock(
                         "BTC", timestamp,
                         open, high, low,

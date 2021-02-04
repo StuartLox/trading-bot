@@ -3,11 +3,14 @@ spring:
     allow-bean-definition-overriding: true
 
 application:
-  btc-stream-uri: ${BTC_STREAM_URI}
+  btc-stream-url: ${BTC_STREAM_URL}
   kafka:
-    bootstrap: ${KAFKA_BOOTSTRAP_SERVERS}
-    schema-registry: ${SCHEMA_REGISTRY_URL}
+    bootstrap: ${BOOTSTRAP_SERVER}
     btc-event-topic: ${BTC_EVENT_TOPIC}
-    hasSecret: false
-    username: "test"
-    password: "test123"
+    hasSecret: true
+    username: ${KAFKA_USERNAME}
+    password: ${KAFKA_PASSWORD}
+  schema-registry:
+    url: ${SCHEMA_REGISTRY_URL}
+    username: ${SR_USERNAME}
+    password: ${SR_PASSWORD}
