@@ -46,8 +46,8 @@ class KafkaConfig {
 
     fun securityConfig(): HashMap<String, Any> {
         val config = HashMap<String, Any>()
-        val saslConfig = "org.apache.kafka.common.security.plain.PlainLoginModule required" +
-                "username=\"$username\" password=\"$password\";"
+        val saslConfig = "org.apache.kafka.common.security.plain.PlainLoginModule required   " +
+        "username=\"$username\" password=\"$password\";"
         config.put("sasl.jaas.config", saslConfig)
         config.put("security.protocol", "SASL_SSL")
         config.put("sasl.mechanism", "PLAIN")
@@ -65,6 +65,7 @@ class KafkaConfig {
         }
         return config
     }
+
     @Bean
     fun producerConfig(): HashMap<String, Any> {
         val props = HashMap<String, Any>()

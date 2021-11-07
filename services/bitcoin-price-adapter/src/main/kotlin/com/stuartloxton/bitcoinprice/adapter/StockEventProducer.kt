@@ -16,18 +16,22 @@ class StockEventProducer(private val kafkaTemplate: KafkaTemplate<String, Stock>
 
     private val log = LoggerFactory.getLogger(StockEventProducer::class.java)
 
-    fun stockEventProducer(stock: Stock): Boolean {
+    private fun publishEvent(topic: String, stock: Stock) {
+        log.info(stock.toString())
+        kafkaTemplate.send(topic, stock.getSymbol(), stock)
+    }
+
+    fun stockEventProducer(stocks: List<Stock>): Boolean {
         val kafkaProducerTopic: String = kafkaConfig.btc_event_topic
         log.info("Start of $kafkaProducerTopic || Stock Event")
-        log.debug("Input Data: $stock")
+
         var success = false
+
         try {
-            log.info(stock.toString())
-            kafkaTemplate.send(kafkaProducerTopic, stock.getSymbol(), stock)
+            stocks.forEach{ publishEvent(kafkaProducerTopic, it) }
             success = true
         } catch (e: Exception) {
             log.error("Exception in StockEvent.||StockEventProducer $e")
-            success = false
         } finally {
             log.info("Stock Event : Status $success")
             return success
