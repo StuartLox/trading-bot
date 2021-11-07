@@ -1,9 +1,12 @@
 package com.stuartloxton.bitcoinprice.streams
 
+import com.stuartloxton.bitcoinprice.ATREvent
+import com.stuartloxton.bitcoinprice.AveragePriceEvent
 import com.stuartloxton.bitcoinprice.BitcoinMetricEvent
 import com.stuartloxton.bitcoinprice.BitcoinMetricEventWindow
 import com.stuartloxton.bitcoinprice.config.KafkaConfig
-import com.stuartloxton.bitcoinprice.streams.metrics.BitcoinMetric
+import com.stuartloxton.bitcoinprice.streams.metrics.ATR
+import com.stuartloxton.bitcoinprice.streams.metrics.AveragePrice
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
@@ -12,7 +15,6 @@ import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.*
-import org.apache.kafka.streams.kstream.Materialized
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
@@ -24,15 +26,37 @@ import java.util.*
 @Component
 class Streams {
     @Autowired
-    private lateinit var bitcoinMetric: BitcoinMetric
+    private lateinit var averagePrice: AveragePrice
+
+    @Autowired
+    private lateinit var atr: ATR
 
     @Bean("kafkaStreamProcessing")
-    fun startProccessing(@Qualifier("streamBuilder") builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<BitcoinMetricEventWindow, BitcoinMetricEvent> {
+    fun startProcessing(@Qualifier("streamBuilder") builder: StreamsBuilder, kafkaConfig: KafkaConfig): KStream<BitcoinMetricEventWindow, BitcoinMetricEvent> {
         val schemaRegistryClient: SchemaRegistryClient = CachedSchemaRegistryClient(kafkaConfig.schemaRegistryUrl, 3)
         return streamsBuilder(builder, kafkaConfig, schemaRegistryClient)
     }
 
-    fun streamsBuilder(builder: StreamsBuilder, kafkaConfig: KafkaConfig, schemaRegistryClient: SchemaRegistryClient?): KStream<BitcoinMetricEventWindow, BitcoinMetricEvent>  {
+    fun joinMetricStreams(
+        averagePriceStream: KStream<BitcoinMetricEventWindow, AveragePriceEvent>,
+        atrStream: KStream<BitcoinMetricEventWindow, ATREvent>
+    ): KStream<BitcoinMetricEventWindow, BitcoinMetricEvent> {
+        val valueJoiner: ValueJoiner<AveragePriceEvent, ATREvent, BitcoinMetricEvent> =
+            ValueJoiner { avgPrice: AveragePriceEvent,
+                          atr: ATREvent ->
+                BitcoinMetricEvent(avgPrice, atr)
+            }
+
+        val joinWindowSize = Duration.ofMinutes(5)
+        val graceWindowSize = Duration.ofHours(10)
+        val window = JoinWindows.of(joinWindowSize).grace(graceWindowSize)
+
+        // Join Streams
+        return averagePriceStream.join(atrStream, valueJoiner, window)
+
+    }
+
+    fun streamsBuilder(builder: StreamsBuilder, kafkaConfig: KafkaConfig, schemaRegistryClient: SchemaRegistryClient): KStream<BitcoinMetricEventWindow, BitcoinMetricEvent>  {
         val stockSpecificAvroSerde = SpecificAvroSerde<Stock>(schemaRegistryClient)
 
         val bitcoinMetricSpecificAvroSerde = SpecificAvroSerde<BitcoinMetricEvent>(schemaRegistryClient)
@@ -48,28 +72,19 @@ class Streams {
 
         val stringSerde = Serdes.StringSerde()
 
-        val topology: KStream<BitcoinMetricEventWindow, BitcoinMetricEvent> = builder.stream(kafkaConfig.btcEventTopic, Consumed.with(
+        val stream: KGroupedStream<String, Stock> = builder.stream(kafkaConfig.btcEventTopic, Consumed.with(
             stringSerde, stockSpecificAvroSerde,
             StockTimestampExtractor(), null))
             .groupByKey()
-            .windowedBy(
-                TimeWindows.of(Duration.ofMinutes(2))
-                    .advanceBy(Duration.ofMinutes(1))
-                    .grace(Duration.ZERO)
-            )
-            .aggregate(
-                { bitcoinMetric.identity() },
-                { _, stc, aggregate -> bitcoinMetric.aggregator(stc, aggregate)},
-                Materialized.with(stringSerde, bitcoinMetricSpecificAvroSerde)
-            )
-            .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
-            .toStream()
 
-            .selectKey{ key, _ -> bitcoinMetric.windowBuilder(key.key(), key.window().end())}
+        // Financial Indicators
+        val averagePrice: KStream<BitcoinMetricEventWindow, AveragePriceEvent> = averagePrice.topology(stream, schemaRegistryClient)
+        val atr: KStream<BitcoinMetricEventWindow, ATREvent> = atr.topology(stream, schemaRegistryClient)
 
-        topology.to(kafkaConfig.btcMetricsTopic, Produced.with(bitcoinMetricWindowSpecificAvroSerde, bitcoinMetricSpecificAvroSerde))
+        // Merge Indicators
+        val joinedStreams = joinMetricStreams(averagePrice, atr)
 
-        return topology
-
+        joinedStreams.to(kafkaConfig.btcEventTopic, Produced.with(bitcoinMetricWindowSpecificAvroSerde, bitcoinMetricSpecificAvroSerde))
+        return joinedStreams
     }
 }

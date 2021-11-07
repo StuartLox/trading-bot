@@ -1,12 +1,12 @@
 {
   "type": "record",
-  "name": "Stock",
+  "name": "Ticker",
   "namespace": "com.stuartloxton.bitcoinpriceadapter",
   "fields": [
     {
         "name": "symbol",
         "type": "string"
-     },
+    },
     {
       "name": "timestamp",
       "type": "long"

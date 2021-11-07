@@ -8,7 +8,7 @@
       "type":[
         {
           "type":"record",
-          "name":"AveragePriceEvent",
+          "name":"AveragePriceEvents",
           "fields":[
             {
               "name":"averagePrice",
@@ -39,7 +39,7 @@
       "type":[
         {
           "type":"record",
-          "name":"ATREvent",
+          "name":"ATREvents",
           "fields":[
             {
               "name":"averageTrueRange",

@@ -14,6 +14,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -86,6 +87,9 @@ class KafkaConfig {
         val config = HashMap<String, Any>()
         config.putAll(commonConfig())
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, streamsBtcMetricsGroupId)
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String()::class.java.getName());
+        config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde::class.java);
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
         return config
     }

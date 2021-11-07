@@ -6,7 +6,7 @@ application:
     btc-event-topic: "test-btc-events"
     btc-metrics-topic: "test-btc-metrics"
     bootstrap: "localhost:9092"
-    schema-registry: "http://localhost:8081"
+    schema-registry: "mock://mock-registry"
     group-id: "test-streams.v1"
     avg-btc-group-id: "avg-btc-groupid"
     hasSecret: false

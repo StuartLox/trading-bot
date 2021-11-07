@@ -1,9 +1,17 @@
 package com.stuartloxton.bitcoinprice.streams.metrics
 
 import com.stuartloxton.bitcoinprice.ATREvent
+import com.stuartloxton.bitcoinprice.AveragePriceEvent
+import com.stuartloxton.bitcoinprice.BitcoinMetricEventWindow
 import com.stuartloxton.bitcoinpriceadapter.Stock
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.streams.kstream.*
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.lang.Math.abs
+import java.time.Duration
 
 
 @Component
@@ -16,11 +24,10 @@ class ATR: Metric<ATREvent> {
         .setClose(0.0)
         .build()
 
-    override fun aggregator(newStock: Stock, current: Any): ATREvent {
-        val atrMetric = current as ATREvent
-        val atrBuilder: ATREvent.Builder = ATREvent.newBuilder(atrMetric)
+    override fun aggregator(newStock: Stock, current: ATREvent): ATREvent {
+        val atrBuilder: ATREvent.Builder = ATREvent.newBuilder(current)
         // Calc Fields
-        val countWindow = atrMetric.getCountWindow() + 1
+        val countWindow = current.getCountWindow() + 1
 
         val v1 = newStock.getClose() - newStock.getLow()
         val v2 = abs(newStock.getHigh() - newStock.getClose())
@@ -30,13 +37,37 @@ class ATR: Metric<ATREvent> {
         val atr = trueRange / countWindow
 
         // Set Fields
-        val newAtr = atrBuilder
+        return atrBuilder
             .setCountWindow(countWindow)
             .setClose(newStock.getClose())
             .setTrueRange(trueRange)
             .setAverageTrueRange(atr)
+            .build()
+    }
 
-        // Build new AveragePrice object
-        return newAtr.build()
+    override fun topology(stream: KGroupedStream<String, Stock>, schemaRegistryClient: SchemaRegistryClient): KStream<BitcoinMetricEventWindow, ATREvent> {
+        val stringSerde = Serdes.StringSerde()
+        val averPriceAvroSerde = SpecificAvroSerde<ATREvent>(schemaRegistryClient)
+
+        return stream.windowedBy(
+            TimeWindows.of(Duration.ofMinutes(2))
+                .advanceBy(Duration.ofMinutes(1))
+                .grace(Duration.ZERO)
+        )
+            .aggregate(
+                { identity() },
+                { _, stc, aggregate -> aggregator(stc, aggregate)},
+                Materialized.with(stringSerde, averPriceAvroSerde)
+            )
+            .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
+            .toStream()
+            .selectKey{ key, _ -> windowBuilder(key.key(), key.window().end())}
+    }
+
+    fun windowBuilder(symbol: String, windowEnd: Long): BitcoinMetricEventWindow {
+        return BitcoinMetricEventWindow.newBuilder()
+            .setSymbol(symbol)
+            .setWindowEnd(windowEnd)
+            .build()
     }
 }
