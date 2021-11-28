@@ -1,6 +1,6 @@
-package com.stuartloxton.bitcoinprice.adapter.config
+package com.stuartloxton.binance.gateway.config
 
-import com.stuartloxton.bitcoinpriceadapter.Stock
+import com.stuartloxton.binance.gateway.Quote
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.slf4j.LoggerFactory
@@ -20,8 +20,8 @@ import org.springframework.kafka.core.ProducerFactory
 class KafkaConfig {
     private val log = LoggerFactory.getLogger(KafkaConfig::class.java)
 
-    @Value("\${application.kafka.btc-event-topic}")
-    var btc_event_topic = ""
+    @Value("\${application.kafka.crypto-price-topic}")
+    var cryptoPriceTopic = ""
 
     @Value("\${application.kafka.bootstrap}")
     var bootstrapUrl: String = ""
@@ -29,7 +29,7 @@ class KafkaConfig {
     @Value("\${application.kafka.schema-registry}")
     var schemaRegistryUrl: String = ""
 
-    @Value("\${application.kafka.hasSecret}")
+    @Value("\${application.kafka.has-secret}")
     var hasSecret: Boolean = false
 
     @Value("\${application.kafka.username}")
@@ -61,12 +61,12 @@ class KafkaConfig {
     }
 
     @Bean
-    fun producerFactory(): ProducerFactory<String, Stock> {
+    fun producerFactory(): ProducerFactory<String, Quote> {
         return DefaultKafkaProducerFactory(producerConfig())
     }
 
     @Bean
-    fun kafkaTemplate(): KafkaTemplate<String, Stock> {
+    fun kafkaTemplate(): KafkaTemplate<String, Quote> {
         return KafkaTemplate(producerFactory())
     }
 }

@@ -1,7 +1,7 @@
 {
   "type": "record",
-  "name": "Stock",
-  "namespace": "com.stuartloxton.bitcoinpriceadapter",
+  "name": "Quote",
+  "namespace": "com.stuartloxton.binance.gateway",
   "fields": [
     {
         "name": "symbol",

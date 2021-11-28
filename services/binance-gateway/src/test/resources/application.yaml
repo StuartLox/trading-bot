@@ -1,0 +1,14 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+application:
+  binance-uri: "wss://stream.binance.com/stream?streams=!miniTicker@arr@3000ms/btcusdt@depth.b10/btcusdt@aggTrade.b10"
+  kafka:
+    bootstrap: "localhost:9092"
+    schema-registry: "http://localhost:8081"
+    crypto-price-topic: "crypto.binance.quote.v1"
+    has-secret: "false"
+    username: "test"
+    password: "test"
+    group-id: "group-id"

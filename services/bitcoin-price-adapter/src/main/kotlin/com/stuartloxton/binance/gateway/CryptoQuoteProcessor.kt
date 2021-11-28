@@ -1,6 +1,6 @@
-package com.stuartloxton.bitcoinprice.adapter
+package com.stuartloxton.cryptoprice.adapter
 
-import com.stuartloxton.bitcoinprice.adapter.config.KafkaConfig
+import com.stuartloxton.cryptoprice.adapter.config.KafkaConfig
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
