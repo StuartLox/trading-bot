@@ -1,0 +1,14 @@
+main:
+  allow-bean-definition-overriding: true
+
+application:
+  kafka:
+    quote-event-topic: "test-quote-events"
+    crypto-metrics-topic: "test-crypto-metrics"
+    bootstrap: "localhost:9092"
+    schema-registry: "http://localhost:8081"
+    group-id: "test-streams.v1"
+    avg-btc-group-id: "avg-btc-groupid"
+    hasSecret: false
+    username: "test"
+    password: "test123"
