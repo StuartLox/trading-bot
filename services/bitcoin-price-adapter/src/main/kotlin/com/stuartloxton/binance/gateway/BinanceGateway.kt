@@ -1,12 +1,12 @@
-package com.stuartloxton.bitcoinprice.adapter
+package com.stuartloxton.cryptoprice.adapter
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 
 @SpringBootApplication
-class BitcoinPriceAdapter
+class CryptoPriceProcessor
 
 fun main(args: Array<String>) {
-	runApplication<BitcoinPriceAdapter>(*args)
+	runApplication<CryptoPriceProcessor>(*args)
 }

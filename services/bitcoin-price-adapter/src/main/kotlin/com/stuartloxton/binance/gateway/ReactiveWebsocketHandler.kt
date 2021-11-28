@@ -1,4 +1,4 @@
-package com.stuartloxton.bitcoinprice.adapter
+package com.stuartloxton.cryptoprice.adapter
 import com.stuartloxton.bitcoinpriceadapter.Stock
 import org.json.JSONArray
 import org.json.JSONObject
@@ -14,43 +14,38 @@ import java.net.URI
 
 @Component
 class ReactiveWebSocketHandler(private val stockEventProducer: StockEventProducer): ApplicationRunner {
-    @Value("\${application.btc-stream-uri}")
-    private val btcUri = ""
+    @Value("\${application.binance-stream}")
+    private val binanceUri = ""
     private val logger: Logger = LoggerFactory.getLogger(ReactiveWebSocketHandler::class.java)
 
-    fun getBtcStock(quotes: JSONArray): Stock? {
+    fun getQuotes(quotes: JSONArray): Stock? {
         for (i in 0 until quotes.length()) {
             val item = quotes.getJSONObject(i)
-            if (item.getString("s") == "BTCUSDT") {
-                logger.debug(item.toString())
-                val volume = item.getDouble("v")
-                val open = item.getDouble("o")
-                val high = item.getDouble("h")
-                val low = item.getDouble("l")
-                val close = item.getDouble("c")
-                val timestamp = item.getLong("E")
-                return Stock(
-                        "BTC", timestamp,
-                        open, high, low,
-                        close, volume)
-            }
+            val symbol = item.getString("s")
+            val volume = item.getDouble("v")
+            val open = item.getDouble("o")
+            val high = item.getDouble("h")
+            val low = item.getDouble("l")
+            val close = item.getDouble("c")
+            val timestamp = item.getLong("E")
+
+            return Stock(
+                symbol, timestamp,
+                    open, high, low,
+                    close, volume)
         }
+
         return null
     }
 
     fun handleStreamQuotes(jsonString: String) {
         val jsonObj = JSONObject(jsonString).get("data")
-        val stock = when (jsonObj) {
-            is JSONArray -> getBtcStock(jsonObj)
-            else -> null
-        }
-        if (stock != null) {
-            stockEventProducer.stockEventProducer(stock)
-        }
+        val stock = getQuotes(jsonObj)
+        stockEventProducer.stockEventProducer(stock)
     }
 
     override fun run(args: ApplicationArguments) {
-        val uri = URI(btcUri)
+        val uri = URI(binanceUri)
         val client = ReactorNettyWebSocketClient()
         client.execute(uri) {session ->
             session.receive()

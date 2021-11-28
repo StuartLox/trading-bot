@@ -1,0 +1,29 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: binance-gateway
+  namespace: binance-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: binance-gateway
+  template:
+    metadata:
+      labels:
+        app: binance-gateway
+    spec:
+      containers:
+        - name: binance-gateway
+          image: stuartloxton/binance-gateway:latest
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name:  BTC_EVENT_TOPIC
+              value: "crypto.binance.quote.v1"
+            - name:  KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: SCHEMA_REGISTRY_URL
+              value: "http://schemaregistry:8081"
+            - name: BTC_STREAM_URI
+              value: "wss://stream.binance.com/stream?streams=!miniTicker@arr@3000ms/btcusdt@depth.b10/btcusdt@aggTrade.b10"
