@@ -1,0 +1,15 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+application:
+  kafka:
+    quote-topic: ${QUOTE_TOPIC:crypto.binance.quote.v1}
+    crytp-metrics-topic: ${CRYPTO_METRICS_TOPIC:crypto.metrics.v1}
+    bootstrap: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    schema-registry: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+    group-id: ${STREAMS_BTC_GROUPID:group}
+    avg-btc-group-id: ${CONSUMER_BTC_GROUPID}
+    hasSecret: ${HAS_SECRET}
+    username: "test"
+    password: "test123"

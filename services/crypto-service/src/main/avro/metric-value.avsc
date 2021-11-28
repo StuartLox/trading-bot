@@ -1,0 +1,15 @@
+{
+  "type":"record",
+  "name":"CryptoMetricEvent",
+  "namespace":"com.stuartloxton.cryptoservice",
+  "fields":[
+    {
+      "name":"avgPrice",
+      "type": "AveragePriceEvent"
+    },
+    {
+      "name":"atr",
+      "type": "ATREvent"
+    }
+  ]
+}

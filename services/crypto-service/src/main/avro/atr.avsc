@@ -1,0 +1,27 @@
+{
+  "type":"record",
+  "name":"ATREvent",
+  "namespace":"com.stuartloxton.cryptoservice",
+  "fields":[
+    {
+      "name":"averageTrueRange",
+      "type":"double"
+    },
+    {
+      "name":"trueRange",
+      "type":"double"
+    },
+    {
+      "name":"countWindow",
+      "type":"int"
+    },
+    {
+      "name":"sumWindow",
+      "type":"double"
+    },
+    {
+      "name":"close",
+      "type":"double"
+    }
+  ]
+}

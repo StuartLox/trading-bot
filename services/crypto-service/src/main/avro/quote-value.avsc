@@ -1,0 +1,35 @@
+{
+  "type": "record",
+  "name": "Quote",
+  "namespace": "com.stuartloxton.binance.gateway",
+  "fields": [
+    {
+        "name": "symbol",
+        "type": "string"
+     },
+    {
+      "name": "timestamp",
+      "type": "long"
+    },
+    {
+      "name": "open",
+      "type": "double"
+    },
+    {
+      "name": "high",
+      "type": "double"
+    },
+    {
+      "name": "low",
+      "type": "double"
+    },
+    {
+      "name": "close",
+      "type": "double"
+    },
+    {
+      "name": "volume",
+      "type": "double"
+    }
+  ]
+}

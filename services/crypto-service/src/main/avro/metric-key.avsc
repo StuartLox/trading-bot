@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "CryptoMetricEventWindow",
+  "namespace": "com.stuartloxton.cryptoservice",
+  "fields": [
+    {
+        "name": "symbol",
+        "type": "string"
+    },
+    {
+        "name": "windowEnd",
+        "type": "long"
+    }
+  ]
+}
